@@ -24,12 +24,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           onPageChanged: (index) {
             setState(() {
               _currentPage = index;
-              isLastPage = index == 2;
+              isLastPage = index == 3;
             });
           },
           children: const [
             OnboardingPage(
               image: 'assets/images/MajiFreshi logo.png',
+              title: 'Maji Fresh',
+              description: 'Fresh Water Delivered to Your Doorstep',
+            ),
+            OnboardingPage(
+              image: 'assets/images/onboarding_water.png',
               title: 'Fresh Drinking Water',
               description:
                   'Quality 20L water bottles delivered to your home or office',
@@ -76,7 +81,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 children: [
                   if (_currentPage == 0)
                     TextButton(
-                      onPressed: () => _controller.jumpToPage(2),
+                      onPressed: () => _controller.jumpToPage(3),
                       child: const Text('Skip'),
                     )
                   else
@@ -90,7 +95,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   Center(
                     child: SmoothPageIndicator(
                       controller: _controller,
-                      count: 3,
+                      count: 4,
                       effect: const WormEffect(
                         spacing: 16,
                         dotColor: Colors.black26,
@@ -128,7 +133,16 @@ class OnboardingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
-      color: AppColors.background,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.primary,
+            AppColors.secondary,
+          ],
+        ),
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -143,7 +157,7 @@ class OnboardingPage extends StatelessWidget {
             style: const TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: AppColors.primary,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
@@ -152,7 +166,7 @@ class OnboardingPage extends StatelessWidget {
             description,
             style: const TextStyle(
               fontSize: 16,
-              color: AppColors.text,
+              color: Colors.white,
             ),
             textAlign: TextAlign.center,
           ),
