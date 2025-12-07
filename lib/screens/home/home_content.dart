@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
-import 'package:maji_freshi/widgets/quick_order_card.dart';
 import 'package:maji_freshi/widgets/recent_order_item.dart';
+import 'package:maji_freshi/widgets/product_card.dart';
+import 'package:maji_freshi/widgets/wholesale_card.dart';
 import 'package:maji_freshi/screens/notifications/notifications_screen.dart';
 
 class HomeContent extends StatelessWidget {
@@ -87,7 +88,55 @@ class HomeContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 24),
-            const QuickOrderCard(),
+            const Text(
+              'Refillable Bottles',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ProductCard(
+              title: '20L Water Bottle',
+              price: 'KSH 250 / refill',
+              imagePath: 'assets/images/bottle_20l.png',
+              isBestSeller: true,
+              onAdd: () {},
+            ),
+            ProductCard(
+              title: '10L Water Bottle',
+              price: 'KSH 150 / refill',
+              imagePath: 'assets/images/bottle_10l.png',
+              onAdd: () {},
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Dispensers & Equipment',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 16),
+            ProductCard(
+              title: 'Water Dispenser',
+              price: 'From KSH 5,000',
+              imagePath: 'assets/images/dispenser.png',
+              onAdd: () {},
+            ),
+            const SizedBox(height: 24),
+            const Text(
+              'Wholesale Packs',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
+            ),
+            const SizedBox(height: 16),
+            const WholesaleCard(),
             const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -95,7 +144,7 @@ class HomeContent extends StatelessWidget {
                 const Text(
                   'Recent Orders',
                   style: TextStyle(
-                    fontSize: 20,
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
                   ),
@@ -113,9 +162,9 @@ class HomeContent extends StatelessWidget {
             const RecentOrderItem(
               status: 'Delivered',
               date: 'Today, 10:30 AM',
-              items: '2 Items',
+              items: '2 items',
               statusColor: Colors.green,
-              statusIcon: Icons.check,
+              statusIcon: Icons.check_circle,
               actionText: 'REORDER',
             ),
             const RecentOrderItem(
@@ -129,7 +178,7 @@ class HomeContent extends StatelessWidget {
             const RecentOrderItem(
               status: 'Delivered',
               date: 'Oct 24, 9:00 AM',
-              items: '5 Items',
+              items: '5 items',
               statusColor: Colors.grey,
               statusIcon: Icons.history,
               actionText: 'REORDER',
