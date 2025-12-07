@@ -25,7 +25,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           },
           children: const [
             OnboardingPage(
-              image: 'assets/images/onboarding_water.png',
+              image: 'assets/images/MajiFreshi logo.png',
               title: 'Fresh Drinking Water',
               description:
                   'Quality 20L water bottles delivered to your home or office',
