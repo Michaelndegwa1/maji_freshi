@@ -12,6 +12,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   bool isLastPage = false;
+  int _currentPage = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +22,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: PageView(
           controller: _controller,
           onPageChanged: (index) {
-            setState(() => isLastPage = index == 2);
+            setState(() {
+              _currentPage = index;
+              isLastPage = index == 2;
+            });
           },
           children: const [
             OnboardingPage(
@@ -70,10 +74,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  TextButton(
-                    onPressed: () => _controller.jumpToPage(2),
-                    child: const Text('Skip'),
-                  ),
+                  if (_currentPage == 0)
+                    TextButton(
+                      onPressed: () => _controller.jumpToPage(2),
+                      child: const Text('Skip'),
+                    )
+                  else
+                    TextButton(
+                      onPressed: () => _controller.previousPage(
+                        duration: const Duration(milliseconds: 500),
+                        curve: Curves.easeInOut,
+                      ),
+                      child: const Text('Back'),
+                    ),
                   Center(
                     child: SmoothPageIndicator(
                       controller: _controller,
