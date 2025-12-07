@@ -6,6 +6,7 @@ import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/login_screen.dart';
 import 'package:maji_freshi/screens/auth/otp_screen.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -77,6 +78,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
+    }
+  }
+
+  void _handleGoogleLogin() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final userCredential = await _authService.signInWithGoogle();
+      if (userCredential != null && mounted) {
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Google Sign-In Failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -178,9 +208,51 @@ class _RegisterScreenState extends State<RegisterScreen> {
             const SizedBox(height: 40),
             _isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : PrimaryButton(
-                    text: 'Sign Up',
-                    onPressed: _handleSignUp,
+                : Column(
+                    children: [
+                      PrimaryButton(
+                        text: 'Sign Up',
+                        onPressed: _handleSignUp,
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: const [
+                          Expanded(child: Divider()),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            child: Text("OR",
+                                style: TextStyle(color: Colors.grey)),
+                          ),
+                          Expanded(child: Divider()),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _handleGoogleLogin,
+                        icon: Image.asset(
+                          'assets/images/google_logo.png', // Ensure you have this asset or use an Icon
+                          height: 24,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.g_mobiledata, size: 24),
+                        ),
+                        label: const Text(
+                          'Sign up with Google',
+                          style: TextStyle(
+                            color: AppColors.text,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          side: const BorderSide(color: Colors.grey),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                      ),
+                    ],
                   ),
             const SizedBox(height: 24),
             const Center(
