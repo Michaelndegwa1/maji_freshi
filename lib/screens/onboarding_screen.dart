@@ -146,10 +146,13 @@ class OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.asset(
-            image,
-            height: 300,
-            fit: BoxFit.contain,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: Image.asset(
+              image,
+              height: 300,
+              fit: BoxFit.contain,
+            ),
           ),
           const SizedBox(height: 64),
           Text(
