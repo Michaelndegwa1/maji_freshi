@@ -5,19 +5,25 @@ class PrimaryButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final IconData? icon;
+  final double? height;
+  final double? width;
+  final double? fontSize;
 
   const PrimaryButton({
     super.key,
     required this.text,
     required this.onPressed,
     this.icon,
+    this.height,
+    this.width,
+    this.fontSize,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: double.infinity,
-      height: 50,
+      width: width ?? double.infinity,
+      height: height ?? 50,
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
@@ -25,6 +31,7 @@ class PrimaryButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          padding: EdgeInsets.zero,
         ),
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -33,15 +40,15 @@ class PrimaryButton extends StatelessWidget {
             children: [
               Text(
                 text,
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: fontSize ?? 18,
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               if (icon != null) ...[
                 const SizedBox(width: 8),
-                Icon(icon, color: Colors.white),
+                Icon(icon, color: Colors.white, size: (fontSize ?? 18) + 4),
               ],
             ],
           ),
