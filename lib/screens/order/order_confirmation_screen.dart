@@ -194,7 +194,30 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.text,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                PrimaryButton(
+                  text: 'PLACE ORDER',
+                  onPressed: items.isEmpty
+                      ? () {}
+                      : () {
+                          OrderService().createOrder(items, total);
+                          CartService().clearCart();
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    MpesaPaymentScreen(amount: total)),
+                          );
+                        },
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

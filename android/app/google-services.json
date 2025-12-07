@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "894326689814",
+    "project_id": "maji-freshi",
+    "storage_bucket": "maji-freshi.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:894326689814:android:9658366ad85379ec742537",
+        "android_client_info": {
+          "package_name": "com.example.maji_freshi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDSvF3kmiBi6JjPNhQBE0-gNzjSECTCisI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

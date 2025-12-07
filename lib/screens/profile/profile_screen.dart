@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/login_screen.dart';
+import 'package:maji_freshi/models/user_model.dart';
+import 'package:maji_freshi/screens/profile/edit_profile_screen.dart';
+import 'package:maji_freshi/screens/profile/my_addresses_screen.dart';
+import 'package:maji_freshi/screens/profile/payment_methods_screen.dart';
+import 'package:maji_freshi/screens/orders/orders_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -29,119 +34,154 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            const CircleAvatar(
-              radius: 50,
-              backgroundColor: Colors.grey,
-              child: Icon(Icons.person, size: 50, color: Colors.white),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'John Mwangi',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '+254 712 345 678',
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: const Text(
-                'Edit Profile',
-                style: TextStyle(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.bold,
+      body: ListenableBuilder(
+        listenable: UserService(),
+        builder: (context, child) {
+          final user = UserService().currentUser;
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                const CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey,
+                  child: Icon(Icons.person, size: 50, color: Colors.white),
                 ),
-              ),
-            ),
-            const SizedBox(height: 40),
-            _buildProfileMenuItem(
-              icon: Icons.location_on,
-              title: 'My Addresses',
-              onTap: () {},
-            ),
-            const SizedBox(height: 16),
-            _buildProfileMenuItem(
-              icon: Icons.credit_card,
-              title: 'Payment Methods',
-              onTap: () {},
-            ),
-            const SizedBox(height: 16),
-            _buildProfileMenuItem(
-              icon: Icons.receipt_long,
-              title: 'Order History',
-              onTap: () {},
-            ),
-            const SizedBox(height: 16),
-            _buildProfileMenuItem(
-              icon: Icons.loyalty,
-              title: 'Rewards & Offers',
-              trailing: const Text(
-                '500 pts',
-                style: TextStyle(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              onTap: () {},
-            ),
-            const SizedBox(height: 16),
-            _buildProfileMenuItem(
-              icon: Icons.help,
-              title: 'Help & Support',
-              onTap: () {},
-            ),
-            const SizedBox(height: 16),
-            _buildProfileMenuItem(
-              icon: Icons.privacy_tip,
-              title: 'Terms & Privacy',
-              onTap: () {},
-            ),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const LoginScreen()),
-                    (route) => false,
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey.shade200,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(
-                    color: Colors.red,
+                const SizedBox(height: 16),
+                Text(
+                  user.name,
+                  style: const TextStyle(
+                    fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: AppColors.text,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                Text(
+                  user.phone,
+                  style: const TextStyle(color: Colors.grey, fontSize: 16),
+                ),
+                const SizedBox(height: 16),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const EditProfileScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 24, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: AppColors.secondary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Text(
+                      'Edit Profile',
+                      style: TextStyle(
+                        color: AppColors.secondary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                _buildProfileMenuItem(
+                  icon: Icons.location_on,
+                  title: 'My Addresses',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const MyAddressesScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildProfileMenuItem(
+                  icon: Icons.credit_card,
+                  title: 'Payment Methods',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const PaymentMethodsScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildProfileMenuItem(
+                  icon: Icons.receipt_long,
+                  title: 'Order History',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const OrdersHistoryScreen()),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildProfileMenuItem(
+                  icon: Icons.loyalty,
+                  title: 'Rewards & Offers',
+                  trailing: const Text(
+                    '500 pts',
+                    style: TextStyle(
+                      color: AppColors.secondary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  onTap: () {},
+                ),
+                const SizedBox(height: 16),
+                _buildProfileMenuItem(
+                  icon: Icons.help,
+                  title: 'Help & Support',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 16),
+                _buildProfileMenuItem(
+                  icon: Icons.privacy_tip,
+                  title: 'Terms & Privacy',
+                  onTap: () {},
+                ),
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      UserService().logout();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const LoginScreen()),
+                        (route) => false,
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade200,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      'Logout',
+                      style: TextStyle(
+                        color: Colors.red,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

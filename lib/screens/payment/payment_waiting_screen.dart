@@ -4,7 +4,8 @@ import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/payment/payment_success_screen.dart';
 
 class PaymentWaitingScreen extends StatefulWidget {
-  const PaymentWaitingScreen({super.key});
+  final double amount;
+  const PaymentWaitingScreen({super.key, required this.amount});
 
   @override
   State<PaymentWaitingScreen> createState() => _PaymentWaitingScreenState();
@@ -23,7 +24,9 @@ class _PaymentWaitingScreenState extends State<PaymentWaitingScreen> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const PaymentSuccessScreen()),
+          MaterialPageRoute(
+              builder: (context) =>
+                  PaymentSuccessScreen(amountPaid: widget.amount)),
         );
       }
     });

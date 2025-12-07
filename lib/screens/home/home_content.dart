@@ -5,6 +5,11 @@ import 'package:maji_freshi/widgets/product_card.dart';
 import 'package:maji_freshi/widgets/wholesale_card.dart';
 import 'package:maji_freshi/screens/notifications/notifications_screen.dart';
 import 'package:maji_freshi/models/cart_model.dart';
+import 'package:maji_freshi/models/order_model.dart';
+import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
+import 'package:maji_freshi/screens/cart/cart_screen.dart';
+import 'package:maji_freshi/data/product_data.dart';
+import 'package:maji_freshi/models/user_model.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -29,6 +34,50 @@ class HomeContent extends StatelessWidget {
         ),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.shopping_cart_outlined, color: AppColors.text),
+                ListenableBuilder(
+                  listenable: CartService(),
+                  builder: (context, child) {
+                    final count = CartService().itemCount;
+                    if (count == 0) return const SizedBox.shrink();
+                    return Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '$count',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CartScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: Stack(
               children: [
@@ -69,9 +118,9 @@ class HomeContent extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Good Morning, John',
-              style: TextStyle(
+            Text(
+              'Good Morning, ${UserService().currentUser.name.split(' ')[0]}',
+              style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
@@ -79,12 +128,13 @@ class HomeContent extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Row(
-              children: const [
-                Icon(Icons.location_on, size: 16, color: AppColors.secondary),
-                SizedBox(width: 4),
+              children: [
+                const Icon(Icons.location_on,
+                    size: 16, color: AppColors.secondary),
+                const SizedBox(width: 4),
                 Text(
-                  'Westlands, Nairobi',
-                  style: TextStyle(color: Colors.grey),
+                  UserService().currentUser.location,
+                  style: const TextStyle(color: Colors.grey),
                 ),
               ],
             ),
@@ -98,31 +148,47 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ProductCard(
-              title: '20L Water Bottle',
-              price: 'KSH 250 / refill',
-              imagePath: 'assets/images/bottle_20l.png',
-              isBestSeller: true,
-              onAdd: () {
-                CartService().addItem(
-                    '20L Water Bottle', 250, 'assets/images/bottle_20l.png', 1);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to cart')),
-                );
-              },
+            ...ProductData.getByCategory('Refill').map((product) => ProductCard(
+                  title: product.title,
+                  price: 'KSH ${product.price.toStringAsFixed(0)}',
+                  imagePath: product.imagePath,
+                  isBestSeller: product.isBestSeller,
+                  onAdd: (quantity) {
+                    CartService().addItem(product.title, product.price,
+                        product.imagePath, quantity);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                          content: Text(
+                              'Added $quantity x ${product.title} to cart')),
+                    );
+                  },
+                )),
+            const SizedBox(height: 24),
+            const Text(
+              'New Bottles',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.text,
+              ),
             ),
-            ProductCard(
-              title: '10L Water Bottle',
-              price: 'KSH 150 / refill',
-              imagePath: 'assets/images/bottle_10l.png',
-              onAdd: () {
-                CartService().addItem(
-                    '10L Water Bottle', 150, 'assets/images/bottle_10l.png', 1);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to cart')),
-                );
-              },
-            ),
+            const SizedBox(height: 16),
+            ...ProductData.getByCategory('New Bottle')
+                .map((product) => ProductCard(
+                      title: product.title,
+                      price: 'KSH ${product.price.toStringAsFixed(0)}',
+                      imagePath: product.imagePath,
+                      isBestSeller: product.isBestSeller,
+                      onAdd: (quantity) {
+                        CartService().addItem(product.title, product.price,
+                            product.imagePath, quantity);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Added $quantity x ${product.title} to cart')),
+                        );
+                      },
+                    )),
             const SizedBox(height: 24),
             const Text(
               'Dispensers & Equipment',
@@ -133,18 +199,22 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            ProductCard(
-              title: 'Water Dispenser',
-              price: 'From KSH 5,000',
-              imagePath: 'assets/images/dispenser.png',
-              onAdd: () {
-                CartService().addItem(
-                    'Water Dispenser', 5000, 'assets/images/dispenser.png', 1);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Added to cart')),
-                );
-              },
-            ),
+            ...ProductData.getByCategory('Dispenser')
+                .map((product) => ProductCard(
+                      title: product.title,
+                      price: 'KSH ${product.price.toStringAsFixed(0)}',
+                      imagePath: product.imagePath,
+                      isBestSeller: product.isBestSeller,
+                      onAdd: (quantity) {
+                        CartService().addItem(product.title, product.price,
+                            product.imagePath, quantity);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Added $quantity x ${product.title} to cart')),
+                        );
+                      },
+                    )),
             const SizedBox(height: 24),
             const Text(
               'Wholesale Packs',
@@ -155,7 +225,18 @@ class HomeContent extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const WholesaleCard(),
+            WholesaleCard(
+              items: ProductData.getByCategory('Wholesale'),
+              onAdd: (product, quantity) {
+                CartService().addItem(
+                    product.title, product.price, product.imagePath, quantity);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Added $quantity x ${product.title} to cart')),
+                );
+              },
+            ),
             const SizedBox(height: 32),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -178,29 +259,80 @@ class HomeContent extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            const RecentOrderItem(
-              status: 'Delivered',
-              date: 'Today, 10:30 AM',
-              items: '2 items',
-              statusColor: Colors.green,
-              statusIcon: Icons.check_circle,
-              actionText: 'REORDER',
-            ),
-            const RecentOrderItem(
-              status: 'In Transit',
-              date: 'Yesterday, 4:15 PM',
-              items: '1 Item',
-              statusColor: Colors.blue,
-              statusIcon: Icons.local_shipping,
-              actionText: 'TRACK',
-            ),
-            const RecentOrderItem(
-              status: 'Delivered',
-              date: 'Oct 24, 9:00 AM',
-              items: '5 items',
-              statusColor: Colors.grey,
-              statusIcon: Icons.history,
-              actionText: 'REORDER',
+            ListenableBuilder(
+              listenable: OrderService(),
+              builder: (context, child) {
+                final orders = OrderService().orders;
+                if (orders.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Text('No recent orders',
+                        style: TextStyle(color: Colors.grey)),
+                  );
+                }
+                return Column(
+                  children: orders.take(3).map((order) {
+                    String statusText;
+                    Color statusColor;
+                    IconData statusIcon;
+                    String actionText;
+
+                    switch (order.status) {
+                      case OrderStatus.placed:
+                        statusText = 'Placed';
+                        statusColor = Colors.blue;
+                        statusIcon = Icons.access_time;
+                        actionText = 'TRACK';
+                        break;
+                      case OrderStatus.confirmed:
+                        statusText = 'Confirmed';
+                        statusColor = Colors.blue;
+                        statusIcon = Icons.check;
+                        actionText = 'TRACK';
+                        break;
+                      case OrderStatus.outForDelivery:
+                        statusText = 'In Transit';
+                        statusColor = Colors.blue;
+                        statusIcon = Icons.local_shipping;
+                        actionText = 'TRACK';
+                        break;
+                      case OrderStatus.delivered:
+                        statusText = 'Delivered';
+                        statusColor = Colors.green;
+                        statusIcon = Icons.check_circle;
+                        actionText = 'REORDER';
+                        break;
+                      case OrderStatus.cancelled:
+                        statusText = 'Cancelled';
+                        statusColor = Colors.red;
+                        statusIcon = Icons.cancel;
+                        actionText = 'REORDER';
+                        break;
+                    }
+
+                    return GestureDetector(
+                      onTap: () {
+                        if (actionText == 'TRACK') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const OrderTrackingScreen()),
+                          );
+                        }
+                      },
+                      child: RecentOrderItem(
+                        status: statusText,
+                        date: order.formattedDate,
+                        items: '${order.items.length} items',
+                        statusColor: statusColor,
+                        statusIcon: statusIcon,
+                        actionText: actionText,
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ],
         ),

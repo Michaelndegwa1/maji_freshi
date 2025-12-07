@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
+import 'package:maji_freshi/models/notification_model.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -22,7 +23,9 @@ class NotificationsScreen extends StatelessWidget {
         centerTitle: true,
         actions: [
           TextButton(
-            onPressed: () {},
+            onPressed: () {
+              NotificationService().clearAll();
+            },
             child: const Text(
               'Clear All',
               style: TextStyle(
@@ -33,62 +36,34 @@ class NotificationsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Today',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildNotificationItem(
-            icon: Icons.local_shipping,
-            iconColor: AppColors.secondary,
-            title: 'Your order is on the way!',
-            body:
-                'Order #1235 is out for delivery. Estimated arrival: 11:30 AM.',
-            time: '10:45 AM',
-          ),
-          const SizedBox(height: 16),
-          _buildNotificationItem(
-            icon: Icons.check_circle,
-            iconColor: Colors.green,
-            title: 'Payment confirmed',
-            body: 'Your payment of KSH 500 for order #1235 has been confirmed.',
-            time: '09:15 AM',
-          ),
-          const SizedBox(height: 24),
-          const Text(
-            'Yesterday',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: AppColors.text,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildNotificationItem(
-            icon: Icons.inventory_2,
-            iconColor: Colors.blue,
-            title: 'Order delivered',
-            body:
-                'Your order #1234 has been successfully delivered. Thank you!',
-            time: '11:45 AM',
-          ),
-          const SizedBox(height: 16),
-          _buildNotificationItem(
-            icon: Icons.campaign,
-            iconColor: Colors.orange,
-            title: 'Special Offer!',
-            body:
-                'Get 15% off on your next order. Use code: FRESH15. T&C apply.',
-            time: '09:00 AM',
-          ),
-        ],
+      body: ListenableBuilder(
+        listenable: NotificationService(),
+        builder: (context, child) {
+          final notifications = NotificationService().notifications;
+          if (notifications.isEmpty) {
+            return Center(
+              child: Text(
+                'No notifications',
+                style: TextStyle(color: Colors.grey.shade500),
+              ),
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: notifications.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final notification = notifications[index];
+              return _buildNotificationItem(
+                icon: notification.icon,
+                iconColor: notification.iconColor,
+                title: notification.title,
+                body: notification.body,
+                time: notification.time,
+              );
+            },
+          );
+        },
       ),
     );
   }

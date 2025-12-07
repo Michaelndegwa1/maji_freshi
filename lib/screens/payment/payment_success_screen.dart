@@ -5,7 +5,9 @@ import 'package:maji_freshi/screens/home/home_screen.dart';
 import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
 
 class PaymentSuccessScreen extends StatelessWidget {
-  const PaymentSuccessScreen({super.key});
+  final double amountPaid;
+
+  const PaymentSuccessScreen({super.key, required this.amountPaid});
 
   @override
   Widget build(BuildContext context) {
@@ -46,9 +48,9 @@ class PaymentSuccessScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 14),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'KSH 3,150',
-              style: TextStyle(
+            Text(
+              'KSH ${amountPaid.toStringAsFixed(0)}',
+              style: const TextStyle(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,

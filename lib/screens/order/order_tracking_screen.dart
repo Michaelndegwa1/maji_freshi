@@ -2,12 +2,30 @@ import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/order/order_delivered_screen.dart';
+import 'package:maji_freshi/models/order_model.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   const OrderTrackingScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final order = OrderService().currentOrder;
+
+    if (order == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.text),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        body: const Center(child: Text('No active order')),
+      );
+    }
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -17,9 +35,10 @@ class OrderTrackingScreen extends StatelessWidget {
           icon: const Icon(Icons.arrow_back, color: AppColors.text),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'Order #1234',
-          style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
+        title: Text(
+          'Order #${order.id.substring(order.id.length - 4)}',
+          style: const TextStyle(
+              color: AppColors.text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
@@ -179,16 +198,15 @@ class OrderTrackingScreen extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  _buildOrderDetailItem(
-                      '1 x 20L Water Bottle (Refill)', 'KSH 250'),
-                  const SizedBox(height: 8),
-                  _buildOrderDetailItem(
-                      '1 x 10L Water Bottle (New)', 'KSH 250'),
+                  ...order.items.map((item) => _buildOrderDetailItem(
+                        '${item.quantity} x ${item.title}',
+                        'KSH ${item.totalPrice.toStringAsFixed(0)}',
+                      )),
                   const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'Total',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
@@ -197,8 +215,8 @@ class OrderTrackingScreen extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'KSH 500',
-                        style: TextStyle(
+                        'KSH ${order.totalAmount.toStringAsFixed(0)}',
+                        style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 18,
                           color: AppColors.text,
@@ -254,7 +272,36 @@ class OrderTrackingScreen extends StatelessWidget {
                   const SizedBox(height: 40),
                   Center(
                     child: TextButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Cancel Order'),
+                            content: const Text(
+                                'Are you sure you want to cancel this order?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('No'),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  OrderService().cancelOrder(order.id);
+                                  Navigator.pop(context); // Close dialog
+                                  Navigator.pop(
+                                      context); // Close tracking screen
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                        content: Text('Order cancelled')),
+                                  );
+                                },
+                                child: const Text('Yes',
+                                    style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                       child: const Text(
                         'Cancel Order',
                         style: TextStyle(

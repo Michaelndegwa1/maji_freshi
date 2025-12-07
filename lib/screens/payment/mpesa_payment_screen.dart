@@ -103,7 +103,8 @@ class MpesaPaymentScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => const PaymentWaitingScreen()),
+                        builder: (context) =>
+                            PaymentWaitingScreen(amount: amount)),
                   );
                 },
                 style: ElevatedButton.styleFrom(

@@ -6,7 +6,7 @@ class ProductCard extends StatefulWidget {
   final String price;
   final String imagePath;
   final bool isBestSeller;
-  final VoidCallback onAdd;
+  final void Function(int) onAdd;
 
   const ProductCard({
     super.key,
@@ -31,11 +31,11 @@ class _ProductCardState extends State<ProductCard> {
   }
 
   void _decrement() {
-    if (_quantity > 0) {
-      setState(() {
+    setState(() {
+      if (_quantity > 0) {
         _quantity--;
-      });
-    }
+      }
+    });
   }
 
   @override
@@ -44,8 +44,8 @@ class _ProductCardState extends State<ProductCard> {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
@@ -56,13 +56,13 @@ class _ProductCardState extends State<ProductCard> {
       ),
       child: Row(
         children: [
-          // Image Container
+          // Image
           Container(
             width: 80,
             height: 80,
             decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
+              color: Colors.grey.shade200,
+              borderRadius: BorderRadius.circular(8),
               image: DecorationImage(
                 image: AssetImage(widget.imagePath),
                 fit: BoxFit.cover,
@@ -137,9 +137,17 @@ class _ProductCardState extends State<ProductCard> {
                     ),
                     // Add Button
                     ElevatedButton(
-                      onPressed: widget.onAdd,
+                      onPressed: _quantity > 0
+                          ? () {
+                              widget.onAdd(_quantity);
+                              setState(() {
+                                _quantity = 0; // Reset after adding
+                              });
+                            }
+                          : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.secondary,
+                        disabledBackgroundColor: Colors.grey.shade300,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(

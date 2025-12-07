@@ -1,12 +1,84 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:maji_freshi/services/auth_service.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/login_screen.dart';
 import 'package:maji_freshi/screens/auth/otp_screen.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 
-class RegisterScreen extends StatelessWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
+
+  @override
+  State<RegisterScreen> createState() => _RegisterScreenState();
+}
+
+class _RegisterScreenState extends State<RegisterScreen> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  String _phoneNumber = '';
+  bool _isLoading = false;
+
+  void _handleSignUp() async {
+    if (_nameController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter your full name')),
+      );
+      return;
+    }
+    if (_phoneNumber.isEmpty || _phoneNumber.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid phone number')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.verifyPhoneNumber(
+        phoneNumber: _phoneNumber,
+        onCodeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _isLoading = false;
+          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpScreen(
+                verificationId: verificationId,
+                phoneNumber: _phoneNumber,
+                name: _nameController.text.trim(),
+                email: _emailController.text.trim(),
+              ),
+            ),
+          );
+        },
+        onVerificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Verification Failed: ${e.message}')),
+          );
+        },
+        onCodeAutoRetrievalTimeout: (String verificationId) {
+          // Auto-resolution timed out...
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,6 +125,7 @@ class RegisterScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextField(
+              controller: _nameController,
               decoration: InputDecoration(
                 hintText: 'John Doe',
                 border: OutlineInputBorder(
@@ -75,7 +148,7 @@ class RegisterScreen extends StatelessWidget {
               ),
               initialCountryCode: 'KE',
               onChanged: (phone) {
-                // print(phone.completeNumber);
+                _phoneNumber = phone.completeNumber;
               },
             ),
             const SizedBox(height: 24),
@@ -94,6 +167,7 @@ class RegisterScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 hintText: 'john@example.com',
                 border: OutlineInputBorder(
@@ -102,15 +176,12 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            PrimaryButton(
-              text: 'Sign Up',
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const OtpScreen()),
-                );
-              },
-            ),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : PrimaryButton(
+                    text: 'Sign Up',
+                    onPressed: _handleSignUp,
+                  ),
             const SizedBox(height: 24),
             const Center(
               child: Text(

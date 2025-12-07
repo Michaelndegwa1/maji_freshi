@@ -1,11 +1,82 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
+import 'package:maji_freshi/services/auth_service.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/home/home_screen.dart';
 
-class OtpScreen extends StatelessWidget {
-  const OtpScreen({super.key});
+class OtpScreen extends StatefulWidget {
+  final String verificationId;
+  final String phoneNumber;
+  final String? name;
+  final String? email;
+
+  const OtpScreen({
+    super.key,
+    required this.verificationId,
+    required this.phoneNumber,
+    this.name,
+    this.email,
+  });
+
+  @override
+  State<OtpScreen> createState() => _OtpScreenState();
+}
+
+class _OtpScreenState extends State<OtpScreen> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _pinController = TextEditingController();
+  bool _isLoading = false;
+
+  void _verifyOtp() async {
+    if (_pinController.text.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter the 6-digit code')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      UserCredential credential = await _authService.signInWithOTP(
+        verificationId: widget.verificationId,
+        smsCode: _pinController.text,
+      );
+
+      if (credential.user != null) {
+        // Save user details if provided (Registration flow)
+        if (widget.name != null) {
+          await _authService.saveUserToFirestore(
+            user: credential.user!,
+            name: widget.name,
+            email: widget.email,
+          );
+        } else {
+          // Login flow - ensure user exists in Firestore (optional check)
+          await _authService.saveUserToFirestore(user: credential.user!);
+        }
+
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid OTP or Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -77,34 +148,35 @@ class OtpScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Enter the 4-digit code sent to',
+              'Enter the 6-digit code sent to',
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 Text(
-                  '+254 712 345 678',
-                  style: TextStyle(
+                  widget.phoneNumber,
+                  style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                     color: AppColors.text,
                   ),
                 ),
-                SizedBox(width: 8),
-                Icon(Icons.edit, size: 16, color: AppColors.secondary),
+                const SizedBox(width: 8),
+                const Icon(Icons.edit, size: 16, color: AppColors.secondary),
               ],
             ),
             const SizedBox(height: 40),
             Pinput(
+              controller: _pinController,
               defaultPinTheme: defaultPinTheme,
               focusedPinTheme: focusedPinTheme,
               submittedPinTheme: submittedPinTheme,
-              length: 4,
+              length: 6,
               pinputAutovalidateMode: PinputAutovalidateMode.onSubmit,
               showCursor: true,
-              onCompleted: (pin) => print(pin),
+              onCompleted: (pin) => _verifyOtp(),
             ),
             const SizedBox(height: 40),
             const Text(
@@ -144,16 +216,13 @@ class OtpScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 60),
-            PrimaryButton(
-              text: 'Verify and Continue',
-              icon: Icons.arrow_forward,
-              onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const HomeScreen()),
-                );
-              },
-            ),
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : PrimaryButton(
+                    text: 'Verify and Continue',
+                    icon: Icons.arrow_forward,
+                    onPressed: _verifyOtp,
+                  ),
           ],
         ),
       ),

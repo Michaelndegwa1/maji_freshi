@@ -14,6 +14,24 @@ class CartItem {
   });
 
   double get totalPrice => price * quantity;
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'price': price,
+      'quantity': quantity,
+      'imagePath': imagePath,
+    };
+  }
+
+  factory CartItem.fromJson(Map<String, dynamic> json) {
+    return CartItem(
+      title: json['title'],
+      price: json['price'],
+      quantity: json['quantity'],
+      imagePath: json['imagePath'],
+    );
+  }
 }
 
 class CartService extends ChangeNotifier {

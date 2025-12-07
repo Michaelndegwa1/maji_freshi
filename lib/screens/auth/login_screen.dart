@@ -1,12 +1,74 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:maji_freshi/services/auth_service.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/register_screen.dart';
 import 'package:maji_freshi/screens/auth/otp_screen.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final AuthService _authService = AuthService();
+  String _phoneNumber = '';
+  bool _isLoading = false;
+
+  void _handleLogin() async {
+    if (_phoneNumber.isEmpty || _phoneNumber.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid phone number')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _authService.verifyPhoneNumber(
+        phoneNumber: _phoneNumber,
+        onCodeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            _isLoading = false;
+          });
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => OtpScreen(
+                verificationId: verificationId,
+                phoneNumber: _phoneNumber,
+              ),
+            ),
+          );
+        },
+        onVerificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isLoading = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Verification Failed: ${e.message}')),
+          );
+        },
+        onCodeAutoRetrievalTimeout: (String verificationId) {
+          // Auto-resolution timed out...
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,20 +161,16 @@ class LoginScreen extends StatelessWidget {
                     ),
                     initialCountryCode: 'KE',
                     onChanged: (phone) {
-                      // print(phone.completeNumber);
+                      _phoneNumber = phone.completeNumber;
                     },
                   ),
                   const SizedBox(height: 32),
-                  PrimaryButton(
-                    text: 'Login',
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const OtpScreen()),
-                      );
-                    },
-                  ),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : PrimaryButton(
+                          text: 'Login',
+                          onPressed: _handleLogin,
+                        ),
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
