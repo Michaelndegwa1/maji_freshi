@@ -4,6 +4,7 @@ import 'package:maji_freshi/widgets/recent_order_item.dart';
 import 'package:maji_freshi/widgets/product_card.dart';
 import 'package:maji_freshi/widgets/wholesale_card.dart';
 import 'package:maji_freshi/screens/notifications/notifications_screen.dart';
+import 'package:maji_freshi/models/cart_model.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
@@ -102,13 +103,25 @@ class HomeContent extends StatelessWidget {
               price: 'KSH 250 / refill',
               imagePath: 'assets/images/bottle_20l.png',
               isBestSeller: true,
-              onAdd: () {},
+              onAdd: () {
+                CartService().addItem(
+                    '20L Water Bottle', 250, 'assets/images/bottle_20l.png', 1);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Added to cart')),
+                );
+              },
             ),
             ProductCard(
               title: '10L Water Bottle',
               price: 'KSH 150 / refill',
               imagePath: 'assets/images/bottle_10l.png',
-              onAdd: () {},
+              onAdd: () {
+                CartService().addItem(
+                    '10L Water Bottle', 150, 'assets/images/bottle_10l.png', 1);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Added to cart')),
+                );
+              },
             ),
             const SizedBox(height: 24),
             const Text(
@@ -124,7 +137,13 @@ class HomeContent extends StatelessWidget {
               title: 'Water Dispenser',
               price: 'From KSH 5,000',
               imagePath: 'assets/images/dispenser.png',
-              onAdd: () {},
+              onAdd: () {
+                CartService().addItem(
+                    'Water Dispenser', 5000, 'assets/images/dispenser.png', 1);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Added to cart')),
+                );
+              },
             ),
             const SizedBox(height: 24),
             const Text(

@@ -4,7 +4,9 @@ import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/payment/payment_waiting_screen.dart';
 
 class MpesaPaymentScreen extends StatelessWidget {
-  const MpesaPaymentScreen({super.key});
+  final double amount;
+
+  const MpesaPaymentScreen({super.key, required this.amount});
 
   @override
   Widget build(BuildContext context) {
@@ -44,9 +46,9 @@ class MpesaPaymentScreen extends StatelessWidget {
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'KSH 500', // Mocked amount
-              style: TextStyle(
+            Text(
+              'KSH ${amount.toStringAsFixed(0)}',
+              style: const TextStyle(
                 fontSize: 40,
                 fontWeight: FontWeight.bold,
                 color: AppColors.text,
