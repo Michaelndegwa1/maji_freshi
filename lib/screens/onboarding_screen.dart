@@ -29,7 +29,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           },
           children: const [
             OnboardingPage(
-              image: 'assets/images/MajiFreshi logo.png',
+              image: 'assets/images/MajiFresh logo.png',
               title: 'Maji Fresh',
               description: 'Fresh Water Delivered to Your Doorstep',
             ),
@@ -45,7 +45,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               description: 'Order in seconds with just a few taps',
             ),
             OnboardingPage(
-              image: 'assets/images/onboarding_delivery.png',
+              image: 'assets/images/driver.png',
               title: 'Fast Delivery',
               description:
                   'Track your delivery in real-time with our eco-friendly bikes',
