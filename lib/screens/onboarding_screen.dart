@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/login_screen.dart';
+import 'package:maji_freshi/widgets/primary_button.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -59,21 +60,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
               height: 80,
               color: AppColors.white,
-              child: SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
-                    );
-                  },
-                  child: const Text(
-                    'Get Started',
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ),
+              child: PrimaryButton(
+                text: 'Get Started',
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const LoginScreen()),
+                  );
+                },
               ),
             )
           : Container(

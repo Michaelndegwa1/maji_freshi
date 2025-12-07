@@ -3,6 +3,7 @@ import 'package:intl_phone_field/intl_phone_field.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/auth/login_screen.dart';
 import 'package:maji_freshi/screens/auth/otp_screen.dart';
+import 'package:maji_freshi/widgets/primary_button.dart';
 
 class RegisterScreen extends StatelessWidget {
   const RegisterScreen({super.key});
@@ -101,31 +102,14 @@ class RegisterScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const OtpScreen()),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Sign Up',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            PrimaryButton(
+              text: 'Sign Up',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const OtpScreen()),
+                );
+              },
             ),
             const SizedBox(height: 24),
             const Center(

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
+import 'package:maji_freshi/widgets/primary_button.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class OtpScreen extends StatelessWidget {
   const OtpScreen({super.key});
@@ -142,35 +144,15 @@ class OtpScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 60),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Navigate to Home
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.secondary,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
-                    Text(
-                      'Verify and Continue',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    Icon(Icons.arrow_forward, color: Colors.white),
-                  ],
-                ),
-              ),
+            PrimaryButton(
+              text: 'Verify and Continue',
+              icon: Icons.arrow_forward,
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
+              },
             ),
           ],
         ),
