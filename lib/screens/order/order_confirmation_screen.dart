@@ -4,6 +4,8 @@ import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/payment/mpesa_payment_screen.dart';
 import 'package:maji_freshi/models/cart_model.dart';
 import 'package:maji_freshi/models/order_model.dart';
+import 'package:maji_freshi/services/database_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class OrderConfirmationScreen extends StatefulWidget {
   const OrderConfirmationScreen({super.key});
@@ -15,6 +17,7 @@ class OrderConfirmationScreen extends StatefulWidget {
 
 class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
   String _selectedPaymentMethod = 'M-Pesa';
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -201,18 +204,77 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
                 const SizedBox(height: 24),
                 PrimaryButton(
                   text: 'PLACE ORDER',
+                  isLoading: _isLoading,
                   onPressed: items.isEmpty
                       ? () {}
-                      : () {
-                          OrderService().createOrder(items, total);
-                          CartService().clearCart();
+                      : () async {
+                          setState(() {
+                            _isLoading = true;
+                          });
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    MpesaPaymentScreen(amount: total)),
-                          );
+                          try {
+                            // TODO: Get actual user ID and details
+                            const userId = 'user_123';
+                            const userName = 'John Doe';
+                            final orderId =
+                                'ORD-${DateTime.now().millisecondsSinceEpoch}';
+
+                            final order = OrderModel(
+                              id: orderId,
+                              userId: userId,
+                              userName: userName,
+                              userPhone: '0712345678', // TODO: Get from user
+                              items: items,
+                              totalAmount: total,
+                              status: OrderStatus.pending,
+                              createdAt: DateTime.now(),
+                              deliveryAddress:
+                                  '123 Valley Road, Nairobi, Kenya', // TODO: Get from user
+                              paymentMethod: _selectedPaymentMethod == 'M-Pesa'
+                                  ? PaymentMethod.mpesa
+                                  : PaymentMethod.cash,
+                              paymentStatus: PaymentStatus.pending,
+                              timeline: [
+                                {
+                                  'status': 'pending',
+                                  'timestamp': Timestamp.now(),
+                                  'description': 'Order placed successfully',
+                                },
+                              ],
+                            );
+
+                            await DatabaseService().createOrder(order);
+                            CartService().clearCart();
+
+                            if (mounted) {
+                              if (_selectedPaymentMethod == 'M-Pesa') {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          MpesaPaymentScreen(amount: total)),
+                                );
+                              } else {
+                                // Navigate directly to tracking for Cash
+                                // TODO: Navigate to OrderTrackingScreen with orderId
+                                Navigator.popUntil(
+                                    context, (route) => route.isFirst);
+                              }
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                    content: Text('Failed to place order: $e')),
+                              );
+                            }
+                          } finally {
+                            if (mounted) {
+                              setState(() {
+                                _isLoading = false;
+                              });
+                            }
+                          }
                         },
                 ),
               ],

@@ -3,15 +3,16 @@ import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/order/order_delivered_screen.dart';
 import 'package:maji_freshi/models/order_model.dart';
+import 'package:maji_freshi/services/database_service.dart';
+import 'package:intl/intl.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
-  const OrderTrackingScreen({super.key});
+  final String? orderId;
+  const OrderTrackingScreen({super.key, this.orderId});
 
   @override
   Widget build(BuildContext context) {
-    final order = OrderService().currentOrder;
-
-    if (order == null) {
+    if (orderId == null) {
       return Scaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(
@@ -22,75 +23,227 @@ class OrderTrackingScreen extends StatelessWidget {
             onPressed: () => Navigator.pop(context),
           ),
         ),
-        body: const Center(child: Text('No active order')),
+        body: const Center(child: Text('No order selected')),
       );
     }
 
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.text),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Order #${order.id.substring(order.id.length - 4)}',
-          style: const TextStyle(
-              color: AppColors.text, fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Map Placeholder
-            Container(
-              height: 250,
-              width: double.infinity,
-              color: Colors.grey.shade300,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  const Center(
-                    child: Text(
-                      'Map View Placeholder',
-                      style: TextStyle(color: Colors.grey, fontSize: 16),
-                    ),
-                  ),
-                  Icon(Icons.location_on, size: 40, color: AppColors.secondary),
-                ],
-              ),
-            ),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: AppColors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
+    return StreamBuilder<OrderModel?>(
+        stream: DatabaseService().streamOrder(orderId!),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+
+          if (snapshot.hasError || !snapshot.hasData) {
+            return Scaffold(
+              appBar: AppBar(
+                backgroundColor: AppColors.background,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: AppColors.text),
+                  onPressed: () => Navigator.pop(context),
                 ),
               ),
+              body: const Center(child: Text('Order not found')),
+            );
+          }
+
+          final order = snapshot.data!;
+
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              backgroundColor: AppColors.background,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: AppColors.text),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text(
+                'Order #${order.id.substring(order.id.length - 4)}',
+                style: const TextStyle(
+                    color: AppColors.text, fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+            ),
+            body: SingleChildScrollView(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Rider Info
-                  Row(
-                    children: [
-                      const CircleAvatar(
-                        radius: 24,
-                        backgroundImage: AssetImage(
-                            'assets/images/driver.png'), // Placeholder
-                        backgroundColor: Colors.grey,
+                  // Map Placeholder
+                  Container(
+                    height: 250,
+                    width: double.infinity,
+                    color: Colors.grey.shade300,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        const Center(
+                          child: Text(
+                            'Map View Placeholder',
+                            style: TextStyle(color: Colors.grey, fontSize: 16),
+                          ),
+                        ),
+                        Icon(Icons.location_on,
+                            size: 40, color: AppColors.secondary),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: const BoxDecoration(
+                      color: AppColors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'David Mwangi',
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Rider Info
+                        if (order.riderId != null)
+                          Row(
+                            children: [
+                              const CircleAvatar(
+                                radius: 24,
+                                backgroundImage: AssetImage(
+                                    'assets/images/driver.png'), // Placeholder
+                                backgroundColor: Colors.grey,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      order.riderName ?? 'Rider',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 18,
+                                        color: AppColors.text,
+                                      ),
+                                    ),
+                                    const Text(
+                                      '0722 123 456', // Placeholder phone
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.phone,
+                                    color: AppColors.secondary, size: 20),
+                              ),
+                              const SizedBox(width: 12),
+                              Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary.withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.chat_bubble,
+                                    color: AppColors.secondary, size: 20),
+                              ),
+                            ],
+                          )
+                        else
+                          const Text('Waiting for rider assignment...',
+                              style: TextStyle(color: Colors.grey)),
+
+                        const SizedBox(height: 24),
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: AppColors.secondary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: const [
+                              Text(
+                                'ESTIMATED DELIVERY TIME',
+                                style: TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                ),
+                              ),
+                              Text(
+                                '10:30 AM', // Placeholder
+                                style: TextStyle(
+                                  color: AppColors.secondary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 32),
+                        const Text(
+                          'ORDER STATUS',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTimelineItem(
+                          title: 'Order Placed',
+                          time: DateFormat('hh:mm a').format(order.createdAt),
+                          isCompleted: true,
+                          isFirst: true,
+                        ),
+                        _buildTimelineItem(
+                          title: 'Order Confirmed',
+                          time: '',
+                          isCompleted:
+                              order.status.index >= OrderStatus.confirmed.index,
+                        ),
+                        _buildTimelineItem(
+                          title: 'Out for Delivery',
+                          time: '',
+                          isCompleted: order.status.index >=
+                              OrderStatus.out_for_delivery.index,
+                          isActive:
+                              order.status == OrderStatus.out_for_delivery,
+                        ),
+                        _buildTimelineItem(
+                          title: 'Delivered',
+                          time: '',
+                          isLast: true,
+                          isCompleted: order.status == OrderStatus.delivered,
+                        ),
+                        const SizedBox(height: 32),
+                        const Divider(),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'ORDER DETAILS',
+                          style: TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ...order.items.map((item) => _buildOrderDetailItem(
+                              '${item.quantity} x ${item.title}',
+                              'KSH ${item.totalPrice.toStringAsFixed(0)}',
+                            )),
+                        const SizedBox(height: 16),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              'Total',
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 18,
@@ -98,239 +251,140 @@ class OrderTrackingScreen extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '0722 123 456',
-                              style: TextStyle(color: Colors.grey),
+                              'KSH ${order.totalAmount.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: AppColors.text,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.1),
-                          shape: BoxShape.circle,
+                        const SizedBox(height: 8),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text('Payment',
+                                style: TextStyle(color: Colors.grey)),
+                            Text(
+                                order.paymentMethod
+                                    .toString()
+                                    .split('.')
+                                    .last
+                                    .toUpperCase(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                          ],
                         ),
-                        child: const Icon(Icons.phone,
-                            color: AppColors.secondary, size: 20),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.chat_bubble,
-                            color: AppColors.secondary, size: 20),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: const [
-                        Text(
-                          'ESTIMATED DELIVERY TIME',
+                        const SizedBox(height: 32),
+                        const Text(
+                          'DELIVERY TO',
                           style: TextStyle(
-                            color: AppColors.secondary,
+                            color: Colors.grey,
                             fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                            fontSize: 14,
                           ),
                         ),
-                        Text(
-                          '10:30 AM',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.location_on,
+                                color: AppColors.secondary),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'Home', // Placeholder
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    order.deliveryAddress,
+                                    style: const TextStyle(color: Colors.grey),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 40),
+                        // Only show cancel if order is pending or confirmed
+                        if (order.status == OrderStatus.pending ||
+                            order.status == OrderStatus.confirmed)
+                          Center(
+                            child: TextButton(
+                              onPressed: () {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Cancel Order'),
+                                    content: const Text(
+                                        'Are you sure you want to cancel this order?'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('No'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          // TODO: Implement cancelOrder in DatabaseService
+                                          // DatabaseService().cancelOrder(order.id);
+                                          Navigator.pop(
+                                              context); // Close dialog
+                                          Navigator.pop(
+                                              context); // Close tracking screen
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                                content:
+                                                    Text('Order cancelled')),
+                                          );
+                                        },
+                                        child: const Text('Yes',
+                                            style:
+                                                TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                              child: const Text(
+                                'Cancel Order',
+                                style: TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
                           ),
+                        // Temporary button to simulate delivery
+                        const SizedBox(height: 20),
+                        PrimaryButton(
+                          text: 'Simulate Delivery',
+                          onPressed: () {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const OrderDeliveredScreen()),
+                            );
+                          },
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'ORDER STATUS',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTimelineItem(
-                    title: 'Order Placed',
-                    time: '10:05 AM',
-                    isCompleted: true,
-                    isFirst: true,
-                  ),
-                  _buildTimelineItem(
-                    title: 'Order Confirmed',
-                    time: '10:06 AM',
-                    isCompleted: true,
-                  ),
-                  _buildTimelineItem(
-                    title: 'Out for Delivery',
-                    time: '10:15 AM',
-                    isCompleted: true,
-                    isActive: true,
-                  ),
-                  _buildTimelineItem(
-                    title: 'Delivered',
-                    time: '',
-                    isLast: true,
-                  ),
-                  const SizedBox(height: 32),
-                  const Divider(),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'ORDER DETAILS',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ...order.items.map((item) => _buildOrderDetailItem(
-                        '${item.quantity} x ${item.title}',
-                        'KSH ${item.totalPrice.toStringAsFixed(0)}',
-                      )),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'Total',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.text,
-                        ),
-                      ),
-                      Text(
-                        'KSH ${order.totalAmount.toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: AppColors.text,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Text('Payment', style: TextStyle(color: Colors.grey)),
-                      Text('M-Pesa',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  const Text(
-                    'DELIVERY TO',
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.location_on, color: AppColors.secondary),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Home',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              '123 Valley Road, Nairobi, Kenya',
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 40),
-                  Center(
-                    child: TextButton(
-                      onPressed: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Cancel Order'),
-                            content: const Text(
-                                'Are you sure you want to cancel this order?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context),
-                                child: const Text('No'),
-                              ),
-                              TextButton(
-                                onPressed: () {
-                                  OrderService().cancelOrder(order.id);
-                                  Navigator.pop(context); // Close dialog
-                                  Navigator.pop(
-                                      context); // Close tracking screen
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text('Order cancelled')),
-                                  );
-                                },
-                                child: const Text('Yes',
-                                    style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                      child: const Text(
-                        'Cancel Order',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Temporary button to simulate delivery
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    text: 'Simulate Delivery',
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const OrderDeliveredScreen()),
-                      );
-                    },
-                  ),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
+          );
+        });
   }
 
   Widget _buildTimelineItem({

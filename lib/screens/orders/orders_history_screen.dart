@@ -3,6 +3,8 @@ import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
 import 'package:maji_freshi/models/order_model.dart';
+import 'package:maji_freshi/services/database_service.dart';
+import 'package:intl/intl.dart';
 
 class OrdersHistoryScreen extends StatefulWidget {
   const OrdersHistoryScreen({super.key});
@@ -14,6 +16,9 @@ class OrdersHistoryScreen extends StatefulWidget {
 class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final DatabaseService _dbService = DatabaseService();
+  // TODO: Get actual current user ID from Auth
+  final String _currentUserId = 'user_123';
 
   @override
   void initState() {
@@ -52,21 +57,31 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
           unselectedLabelColor: Colors.grey,
           indicatorColor: AppColors.secondary,
           tabs: const [
-            Tab(text: 'All'),
             Tab(text: 'Active'),
             Tab(text: 'Completed'),
+            Tab(text: 'Cancelled'),
           ],
         ),
       ),
-      body: ListenableBuilder(
-        listenable: OrderService(),
-        builder: (context, child) {
+      body: StreamBuilder<List<OrderModel>>(
+        stream: _dbService.getUserOrders(_currentUserId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final allOrders = snapshot.data ?? [];
+
           return TabBarView(
             controller: _tabController,
             children: [
-              _buildOrderList(isAll: true),
-              _buildOrderList(isActive: true),
-              _buildOrderList(isCompleted: true),
+              _buildOrderList(allOrders, isActive: true),
+              _buildOrderList(allOrders, isCompleted: true),
+              _buildOrderList(allOrders, isCancelled: true),
             ],
           );
         },
@@ -74,25 +89,27 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
     );
   }
 
-  Widget _buildOrderList(
-      {bool isAll = false, bool isActive = false, bool isCompleted = false}) {
-    final allOrders = OrderService().orders;
+  Widget _buildOrderList(List<OrderModel> allOrders,
+      {bool isActive = false,
+      bool isCompleted = false,
+      bool isCancelled = false}) {
     List<OrderModel> filteredOrders = [];
 
-    if (isAll) {
-      filteredOrders = allOrders;
-    } else if (isActive) {
+    if (isActive) {
       filteredOrders = allOrders
           .where((order) =>
-              order.status == OrderStatus.placed ||
+              order.status == OrderStatus.pending ||
               order.status == OrderStatus.confirmed ||
-              order.status == OrderStatus.outForDelivery)
+              order.status == OrderStatus.assigned ||
+              order.status == OrderStatus.out_for_delivery)
           .toList();
     } else if (isCompleted) {
       filteredOrders = allOrders
-          .where((order) =>
-              order.status == OrderStatus.delivered ||
-              order.status == OrderStatus.cancelled)
+          .where((order) => order.status == OrderStatus.delivered)
+          .toList();
+    } else if (isCancelled) {
+      filteredOrders = allOrders
+          .where((order) => order.status == OrderStatus.cancelled)
           .toList();
     }
 
@@ -130,7 +147,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
     Widget actionButton;
 
     switch (order.status) {
-      case OrderStatus.placed:
+      case OrderStatus.pending:
         statusText = 'Placed';
         statusColor = Colors.blue.shade100;
         statusTextColor = Colors.blue.shade800;
@@ -142,7 +159,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => const OrderTrackingScreen()),
+                  builder: (context) => OrderTrackingScreen(orderId: order.id)),
             );
           },
         );
@@ -159,12 +176,29 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => const OrderTrackingScreen()),
+                  builder: (context) => OrderTrackingScreen(orderId: order.id)),
             );
           },
         );
         break;
-      case OrderStatus.outForDelivery:
+      case OrderStatus.assigned:
+        statusText = 'Rider Assigned';
+        statusColor = Colors.orange.shade100;
+        statusTextColor = Colors.orange.shade800;
+        actionButton = PrimaryButton(
+          text: 'Track Order',
+          height: 40,
+          fontSize: 14,
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => OrderTrackingScreen(orderId: order.id)),
+            );
+          },
+        );
+        break;
+      case OrderStatus.out_for_delivery:
         statusText = 'On The Way';
         statusColor = Colors.orange.shade100;
         statusTextColor = Colors.orange.shade800;
@@ -176,7 +210,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
             Navigator.push(
               context,
               MaterialPageRoute(
-                  builder: (context) => const OrderTrackingScreen()),
+                  builder: (context) => OrderTrackingScreen(orderId: order.id)),
             );
           },
         );
@@ -276,14 +310,14 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
                 ),
               ),
               Text(
-                order.formattedDate,
+                DateFormat('MMM d, yyyy').format(order.createdAt),
                 style: const TextStyle(color: Colors.grey, fontSize: 12),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Order ${order.id}',
+            'Order #${order.id.substring(order.id.length - 4)}',
             style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,

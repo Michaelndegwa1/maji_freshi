@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/models/cart_model.dart';
-import 'package:maji_freshi/models/order_model.dart';
-import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
+import 'package:maji_freshi/screens/order/order_confirmation_screen.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 
 class CartScreen extends StatelessWidget {
@@ -190,18 +189,11 @@ class CartScreen extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Create Order
-                          OrderService().createOrder(
-                            CartService().items,
-                            CartService().totalAmount,
-                          );
-                          // Clear Cart
-                          CartService().clearCart();
-                          // Navigate to Order Tracking
-                          Navigator.pushReplacement(
+                          Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const OrderTrackingScreen(),
+                              builder: (context) =>
+                                  const OrderConfirmationScreen(),
                             ),
                           );
                         },

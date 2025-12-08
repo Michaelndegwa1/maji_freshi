@@ -6,12 +6,18 @@ import 'package:maji_freshi/screens/profile/edit_profile_screen.dart';
 import 'package:maji_freshi/screens/profile/my_addresses_screen.dart';
 import 'package:maji_freshi/screens/profile/payment_methods_screen.dart';
 import 'package:maji_freshi/screens/orders/orders_history_screen.dart';
+import 'package:maji_freshi/services/database_service.dart';
+import 'package:maji_freshi/services/auth_service.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Get actual current user ID from Auth
+    const String currentUserId = 'user_123';
+    final dbService = DatabaseService();
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -34,10 +40,22 @@ class ProfileScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: ListenableBuilder(
-        listenable: UserService(),
-        builder: (context, child) {
-          final user = UserService().currentUser;
+      body: StreamBuilder<UserModel?>(
+        stream: dbService.streamUser(currentUserId),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final user = snapshot.data;
+          if (user == null) {
+            return const Center(child: Text('User not found'));
+          }
+
           return SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -67,7 +85,7 @@ class ProfileScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const EditProfileScreen()),
+                          builder: (context) => EditProfileScreen(user: user)),
                     );
                   },
                   child: Container(
@@ -94,7 +112,8 @@ class ProfileScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const MyAddressesScreen()),
+                          builder: (context) =>
+                              MyAddressesScreen(userId: currentUserId)),
                     );
                   },
                 ),
@@ -106,7 +125,8 @@ class ProfileScreen extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const PaymentMethodsScreen()),
+                          builder: (context) =>
+                              PaymentMethodsScreen(userId: currentUserId)),
                     );
                   },
                 ),
@@ -152,14 +172,16 @@ class ProfileScreen extends StatelessWidget {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      UserService().logout();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const LoginScreen()),
-                        (route) => false,
-                      );
+                    onPressed: () async {
+                      await AuthService().signOut();
+                      if (context.mounted) {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const LoginScreen()),
+                          (route) => false,
+                        );
+                      }
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.grey.shade200,

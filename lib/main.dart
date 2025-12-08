@@ -4,6 +4,8 @@ import 'package:maji_freshi/utils/app_theme.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:maji_freshi/data/product_data.dart';
+import 'package:maji_freshi/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,15 +14,14 @@ void main() async {
   );
 
   // TODO: Remove this after first run
-  // await _migrateData();
+  // try {
+  //   await _migrateData();
+  // } catch (e) {
+  //   print('Migration failed: $e');
+  // }
 
   runApp(const MyApp());
 }
-
-// Temporary migration function
-/*
-import 'package:maji_freshi/data/product_data.dart';
-import 'package:maji_freshi/services/database_service.dart';
 
 Future<void> _migrateData() async {
   final db = DatabaseService();
@@ -29,7 +30,6 @@ Future<void> _migrateData() async {
     print('Uploaded: ${product.title}');
   }
 }
-*/
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/models/user_model.dart';
+import 'package:maji_freshi/services/database_service.dart';
 
 class EditProfileScreen extends StatefulWidget {
-  const EditProfileScreen({super.key});
+  final UserModel user;
+  const EditProfileScreen({super.key, required this.user});
 
   @override
   State<EditProfileScreen> createState() => _EditProfileScreenState();
@@ -14,14 +16,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
   late TextEditingController _emailController;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    final user = UserService().currentUser;
-    _nameController = TextEditingController(text: user.name);
-    _phoneController = TextEditingController(text: user.phone);
-    _emailController = TextEditingController(text: user.email);
+    _nameController = TextEditingController(text: widget.user.name);
+    _phoneController = TextEditingController(text: widget.user.phone);
+    _emailController = TextEditingController(text: widget.user.email);
   }
 
   @override
@@ -32,16 +34,47 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    UserService().updateProfile(
-      name: _nameController.text,
-      phone: _phoneController.text,
-      email: _emailController.text,
-    );
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile updated successfully')),
-    );
+  Future<void> _saveProfile() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final updatedUser = UserModel(
+        id: widget.user.id,
+        name: _nameController.text,
+        phone: _phoneController.text,
+        email: _emailController.text,
+        location: widget.user.location,
+        profileImage: widget.user.profileImage,
+        addresses: widget.user.addresses,
+        paymentMethods: widget.user.paymentMethods,
+        role: widget.user.role,
+        fcmToken: widget.user.fcmToken,
+        createdAt: widget.user.createdAt,
+      );
+
+      await DatabaseService().saveUser(updatedUser);
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile updated successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error updating profile: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -111,6 +144,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             PrimaryButton(
               text: 'Save Changes',
               onPressed: _saveProfile,
+              isLoading: _isLoading,
             ),
           ],
         ),

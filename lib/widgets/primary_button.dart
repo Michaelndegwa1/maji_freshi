@@ -8,6 +8,7 @@ class PrimaryButton extends StatelessWidget {
   final double? height;
   final double? width;
   final double? fontSize;
+  final bool isLoading;
 
   const PrimaryButton({
     super.key,
@@ -17,6 +18,7 @@ class PrimaryButton extends StatelessWidget {
     this.height,
     this.width,
     this.fontSize,
+    this.isLoading = false,
   });
 
   @override
@@ -25,7 +27,7 @@ class PrimaryButton extends StatelessWidget {
       width: width ?? double.infinity,
       height: height ?? 50,
       child: ElevatedButton(
-        onPressed: onPressed,
+        onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.secondary,
           shape: RoundedRectangleBorder(
@@ -33,26 +35,36 @@ class PrimaryButton extends StatelessWidget {
           ),
           padding: EdgeInsets.zero,
         ),
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                text,
-                style: TextStyle(
-                  fontSize: fontSize ?? 18,
+        child: isLoading
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
                   color: Colors.white,
-                  fontWeight: FontWeight.bold,
+                  strokeWidth: 2,
+                ),
+              )
+            : FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      text,
+                      style: TextStyle(
+                        fontSize: fontSize ?? 18,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    if (icon != null) ...[
+                      const SizedBox(width: 8),
+                      Icon(icon,
+                          color: Colors.white, size: (fontSize ?? 18) + 4),
+                    ],
+                  ],
                 ),
               ),
-              if (icon != null) ...[
-                const SizedBox(width: 8),
-                Icon(icon, color: Colors.white, size: (fontSize ?? 18) + 4),
-              ],
-            ],
-          ),
-        ),
       ),
     );
   }
