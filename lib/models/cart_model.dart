@@ -15,7 +15,7 @@ class CartItem {
 
   double get totalPrice => price * quantity;
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'title': title,
       'price': price,
@@ -24,14 +24,19 @@ class CartItem {
     };
   }
 
-  factory CartItem.fromJson(Map<String, dynamic> json) {
+  factory CartItem.fromMap(Map<String, dynamic> map) {
     return CartItem(
-      title: json['title'],
-      price: json['price'],
-      quantity: json['quantity'],
-      imagePath: json['imagePath'],
+      title: map['title'] ?? '',
+      price: (map['price'] ?? 0).toDouble(),
+      quantity: map['quantity'] ?? 0,
+      imagePath: map['imagePath'] ?? '',
     );
   }
+
+  // Keep toJson/fromJson for backward compatibility if needed, or redirect them
+  Map<String, dynamic> toJson() => toMap();
+  factory CartItem.fromJson(Map<String, dynamic> json) =>
+      CartItem.fromMap(json);
 }
 
 class CartService extends ChangeNotifier {

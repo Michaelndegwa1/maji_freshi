@@ -6,16 +6,22 @@ import 'package:maji_freshi/widgets/wholesale_card.dart';
 import 'package:maji_freshi/screens/notifications/notifications_screen.dart';
 import 'package:maji_freshi/models/cart_model.dart';
 import 'package:maji_freshi/models/order_model.dart';
+import 'package:maji_freshi/models/product_model.dart';
 import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
 import 'package:maji_freshi/screens/cart/cart_screen.dart';
-import 'package:maji_freshi/data/product_data.dart';
+import 'package:maji_freshi/services/database_service.dart';
 import 'package:maji_freshi/models/user_model.dart';
+import 'package:intl/intl.dart';
 
 class HomeContent extends StatelessWidget {
   const HomeContent({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final dbService = DatabaseService();
+    // TODO: Get actual current user ID from Auth
+    const String currentUserId = 'user_123';
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
@@ -113,229 +119,281 @@ class HomeContent extends StatelessWidget {
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Good Morning, ${UserService().currentUser.name.split(' ')[0]}',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Row(
+      body: StreamBuilder<List<ProductModel>>(
+        stream: dbService.getProducts(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          final products = snapshot.data ?? [];
+          final refillProducts =
+              products.where((p) => p.category == 'Refill').toList();
+          final newBottleProducts =
+              products.where((p) => p.category == 'New Bottle').toList();
+          final dispenserProducts =
+              products.where((p) => p.category == 'Dispenser').toList();
+          final wholesaleProducts =
+              products.where((p) => p.category == 'Wholesale').toList();
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.location_on,
-                    size: 16, color: AppColors.secondary),
-                const SizedBox(width: 4),
+                // TODO: Use StreamBuilder for User Profile as well
                 Text(
-                  UserService().currentUser.location,
-                  style: const TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Refillable Bottles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...ProductData.getByCategory('Refill').map((product) => ProductCard(
-                  title: product.title,
-                  price: 'KSH ${product.price.toStringAsFixed(0)}',
-                  imagePath: product.imagePath,
-                  isBestSeller: product.isBestSeller,
-                  onAdd: (quantity) {
-                    CartService().addItem(product.title, product.price,
-                        product.imagePath, quantity);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'Added $quantity x ${product.title} to cart')),
-                    );
-                  },
-                )),
-            const SizedBox(height: 24),
-            const Text(
-              'New Bottles',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...ProductData.getByCategory('New Bottle')
-                .map((product) => ProductCard(
-                      title: product.title,
-                      price: 'KSH ${product.price.toStringAsFixed(0)}',
-                      imagePath: product.imagePath,
-                      isBestSeller: product.isBestSeller,
-                      onAdd: (quantity) {
-                        CartService().addItem(product.title, product.price,
-                            product.imagePath, quantity);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Added $quantity x ${product.title} to cart')),
-                        );
-                      },
-                    )),
-            const SizedBox(height: 24),
-            const Text(
-              'Dispensers & Equipment',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
-            ...ProductData.getByCategory('Dispenser')
-                .map((product) => ProductCard(
-                      title: product.title,
-                      price: 'KSH ${product.price.toStringAsFixed(0)}',
-                      imagePath: product.imagePath,
-                      isBestSeller: product.isBestSeller,
-                      onAdd: (quantity) {
-                        CartService().addItem(product.title, product.price,
-                            product.imagePath, quantity);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                              content: Text(
-                                  'Added $quantity x ${product.title} to cart')),
-                        );
-                      },
-                    )),
-            const SizedBox(height: 24),
-            const Text(
-              'Wholesale Packs',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: AppColors.text,
-              ),
-            ),
-            const SizedBox(height: 16),
-            WholesaleCard(
-              items: ProductData.getByCategory('Wholesale'),
-              onAdd: (product, quantity) {
-                CartService().addItem(
-                    product.title, product.price, product.imagePath, quantity);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                      content:
-                          Text('Added $quantity x ${product.title} to cart')),
-                );
-              },
-            ),
-            const SizedBox(height: 32),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Recent Orders',
-                  style: TextStyle(
-                    fontSize: 18,
+                  'Good Morning, John', // Placeholder
+                  style: const TextStyle(
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: AppColors.text,
                   ),
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'See All',
-                    style: TextStyle(color: AppColors.secondary),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: AppColors.secondary),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'Westlands, Nairobi', // Placeholder
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Refills
+                if (refillProducts.isNotEmpty) ...[
+                  const Text(
+                    'Refillable Bottles',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
                   ),
+                  const SizedBox(height: 16),
+                  ...refillProducts.map((product) => ProductCard(
+                        title: product.title,
+                        price: 'KSH ${product.price.toStringAsFixed(0)}',
+                        imagePath: product.imagePath,
+                        isBestSeller: product.isBestSeller,
+                        onAdd: (quantity) {
+                          CartService().addItem(product.title, product.price,
+                              product.imagePath, quantity);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Added $quantity x ${product.title} to cart')),
+                          );
+                        },
+                      )),
+                  const SizedBox(height: 24),
+                ],
+
+                // New Bottles
+                if (newBottleProducts.isNotEmpty) ...[
+                  const Text(
+                    'New Bottles',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...newBottleProducts.map((product) => ProductCard(
+                        title: product.title,
+                        price: 'KSH ${product.price.toStringAsFixed(0)}',
+                        imagePath: product.imagePath,
+                        isBestSeller: product.isBestSeller,
+                        onAdd: (quantity) {
+                          CartService().addItem(product.title, product.price,
+                              product.imagePath, quantity);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Added $quantity x ${product.title} to cart')),
+                          );
+                        },
+                      )),
+                  const SizedBox(height: 24),
+                ],
+
+                // Dispensers
+                if (dispenserProducts.isNotEmpty) ...[
+                  const Text(
+                    'Dispensers & Equipment',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ...dispenserProducts.map((product) => ProductCard(
+                        title: product.title,
+                        price: 'KSH ${product.price.toStringAsFixed(0)}',
+                        imagePath: product.imagePath,
+                        isBestSeller: product.isBestSeller,
+                        onAdd: (quantity) {
+                          CartService().addItem(product.title, product.price,
+                              product.imagePath, quantity);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text(
+                                    'Added $quantity x ${product.title} to cart')),
+                          );
+                        },
+                      )),
+                  const SizedBox(height: 24),
+                ],
+
+                // Wholesale
+                if (wholesaleProducts.isNotEmpty) ...[
+                  const Text(
+                    'Wholesale Packs',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.text,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  WholesaleCard(
+                    items: wholesaleProducts,
+                    onAdd: (product, quantity) {
+                      CartService().addItem(product.title, product.price,
+                          product.imagePath, quantity);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'Added $quantity x ${product.title} to cart')),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 32),
+                ],
+
+                // Recent Orders
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Recent Orders',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.text,
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'See All',
+                        style: TextStyle(color: AppColors.secondary),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                StreamBuilder<List<OrderModel>>(
+                  stream: dbService.getUserOrders(currentUserId),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final orders = snapshot.data ?? [];
+                    if (orders.isEmpty) {
+                      return const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Text('No recent orders',
+                            style: TextStyle(color: Colors.grey)),
+                      );
+                    }
+
+                    return Column(
+                      children: orders.take(3).map((order) {
+                        String statusText;
+                        Color statusColor;
+                        IconData statusIcon;
+                        String actionText;
+
+                        switch (order.status) {
+                          case OrderStatus.pending:
+                            statusText = 'Placed';
+                            statusColor = Colors.blue;
+                            statusIcon = Icons.access_time;
+                            actionText = 'TRACK';
+                            break;
+                          case OrderStatus.confirmed:
+                            statusText = 'Confirmed';
+                            statusColor = Colors.blue;
+                            statusIcon = Icons.check;
+                            actionText = 'TRACK';
+                            break;
+                          case OrderStatus.assigned:
+                            statusText = 'Rider Assigned';
+                            statusColor = Colors.orange;
+                            statusIcon = Icons.delivery_dining;
+                            actionText = 'TRACK';
+                            break;
+                          case OrderStatus.out_for_delivery:
+                            statusText = 'In Transit';
+                            statusColor = Colors.blue;
+                            statusIcon = Icons.local_shipping;
+                            actionText = 'TRACK';
+                            break;
+                          case OrderStatus.delivered:
+                            statusText = 'Delivered';
+                            statusColor = Colors.green;
+                            statusIcon = Icons.check_circle;
+                            actionText = 'REORDER';
+                            break;
+                          case OrderStatus.cancelled:
+                            statusText = 'Cancelled';
+                            statusColor = Colors.red;
+                            statusIcon = Icons.cancel;
+                            actionText = 'REORDER';
+                            break;
+                        }
+
+                        return GestureDetector(
+                          onTap: () {
+                            if (actionText == 'TRACK') {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const OrderTrackingScreen()),
+                              );
+                            }
+                          },
+                          child: RecentOrderItem(
+                            status: statusText,
+                            date: DateFormat('MMM d, yyyy')
+                                .format(order.createdAt),
+                            items: '${order.items.length} items',
+                            statusColor: statusColor,
+                            statusIcon: statusIcon,
+                            actionText: actionText,
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  },
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            ListenableBuilder(
-              listenable: OrderService(),
-              builder: (context, child) {
-                final orders = OrderService().orders;
-                if (orders.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 16.0),
-                    child: Text('No recent orders',
-                        style: TextStyle(color: Colors.grey)),
-                  );
-                }
-                return Column(
-                  children: orders.take(3).map((order) {
-                    String statusText;
-                    Color statusColor;
-                    IconData statusIcon;
-                    String actionText;
-
-                    switch (order.status) {
-                      case OrderStatus.placed:
-                        statusText = 'Placed';
-                        statusColor = Colors.blue;
-                        statusIcon = Icons.access_time;
-                        actionText = 'TRACK';
-                        break;
-                      case OrderStatus.confirmed:
-                        statusText = 'Confirmed';
-                        statusColor = Colors.blue;
-                        statusIcon = Icons.check;
-                        actionText = 'TRACK';
-                        break;
-                      case OrderStatus.outForDelivery:
-                        statusText = 'In Transit';
-                        statusColor = Colors.blue;
-                        statusIcon = Icons.local_shipping;
-                        actionText = 'TRACK';
-                        break;
-                      case OrderStatus.delivered:
-                        statusText = 'Delivered';
-                        statusColor = Colors.green;
-                        statusIcon = Icons.check_circle;
-                        actionText = 'REORDER';
-                        break;
-                      case OrderStatus.cancelled:
-                        statusText = 'Cancelled';
-                        statusColor = Colors.red;
-                        statusIcon = Icons.cancel;
-                        actionText = 'REORDER';
-                        break;
-                    }
-
-                    return GestureDetector(
-                      onTap: () {
-                        if (actionText == 'TRACK') {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const OrderTrackingScreen()),
-                          );
-                        }
-                      },
-                      child: RecentOrderItem(
-                        status: statusText,
-                        date: order.formattedDate,
-                        items: '${order.items.length} items',
-                        statusColor: statusColor,
-                        statusIcon: statusIcon,
-                        actionText: actionText,
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

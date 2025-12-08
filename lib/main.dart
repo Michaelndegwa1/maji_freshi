@@ -10,8 +10,26 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
+  // TODO: Remove this after first run
+  // await _migrateData();
+
   runApp(const MyApp());
 }
+
+// Temporary migration function
+/*
+import 'package:maji_freshi/data/product_data.dart';
+import 'package:maji_freshi/services/database_service.dart';
+
+Future<void> _migrateData() async {
+  final db = DatabaseService();
+  for (var product in ProductData.products) {
+    await db.uploadProduct(product);
+    print('Uploaded: ${product.title}');
+  }
+}
+*/
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});

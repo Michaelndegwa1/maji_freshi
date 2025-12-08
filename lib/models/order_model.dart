@@ -1,121 +1,106 @@
-import 'package:flutter/foundation.dart';
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:maji_freshi/models/cart_model.dart';
 
-enum OrderStatus { placed, confirmed, outForDelivery, delivered, cancelled }
+enum OrderStatus {
+  pending,
+  confirmed,
+  assigned,
+  out_for_delivery,
+  delivered,
+  cancelled
+}
+
+enum PaymentStatus { pending, completed, failed }
+
+enum PaymentMethod { mpesa, cash }
 
 class OrderModel {
   final String id;
+  final String userId;
+  final String userName;
+  final String userPhone;
   final List<CartItem> items;
   final double totalAmount;
-  final DateTime date;
-  OrderStatus status;
+  final String deliveryAddress;
+  final GeoPoint? deliveryLocation;
+  final OrderStatus status;
+  final PaymentStatus paymentStatus;
+  final PaymentMethod paymentMethod;
+  final String? riderId;
+  final String? riderName;
+  final DateTime createdAt;
+  final List<Map<String, dynamic>>
+      timeline; // [{status: 'pending', time: timestamp}]
 
-  OrderModel({
+  const OrderModel({
     required this.id,
+    required this.userId,
+    required this.userName,
+    required this.userPhone,
     required this.items,
     required this.totalAmount,
-    required this.date,
-    this.status = OrderStatus.placed,
+    required this.deliveryAddress,
+    this.deliveryLocation,
+    this.status = OrderStatus.pending,
+    this.paymentStatus = PaymentStatus.pending,
+    required this.paymentMethod,
+    this.riderId,
+    this.riderName,
+    required this.createdAt,
+    this.timeline = const [],
   });
 
-  String get formattedDate {
-    // Simple formatting for now
-    return "${date.day}/${date.month}/${date.year} ${date.hour}:${date.minute.toString().padLeft(2, '0')}";
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'items': items.map((item) => item.toJson()).toList(),
-      'totalAmount': totalAmount,
-      'date': date.toIso8601String(),
-      'status': status.index,
-    };
-  }
-
-  factory OrderModel.fromJson(Map<String, dynamic> json) {
+  factory OrderModel.fromMap(Map<String, dynamic> data, String documentId) {
     return OrderModel(
-      id: json['id'],
-      items: (json['items'] as List)
-          .map((item) => CartItem.fromJson(item))
-          .toList(),
-      totalAmount: json['totalAmount'],
-      date: DateTime.parse(json['date']),
-      status: OrderStatus.values[json['status']],
+      id: documentId,
+      userId: data['userId'] ?? '',
+      userName: data['userName'] ?? '',
+      userPhone: data['userPhone'] ?? '',
+      items: (data['items'] as List<dynamic>?)
+              ?.map((item) => CartItem.fromMap(item))
+              .toList() ??
+          [],
+      totalAmount: (data['totalAmount'] ?? 0).toDouble(),
+      deliveryAddress: data['deliveryAddress'] ?? '',
+      deliveryLocation: data['deliveryLocation'] as GeoPoint?,
+      status: OrderStatus.values.firstWhere(
+        (e) => e.toString().split('.').last == (data['status'] ?? 'pending'),
+        orElse: () => OrderStatus.pending,
+      ),
+      paymentStatus: PaymentStatus.values.firstWhere(
+        (e) =>
+            e.toString().split('.').last ==
+            (data['paymentStatus'] ?? 'pending'),
+        orElse: () => PaymentStatus.pending,
+      ),
+      paymentMethod: PaymentMethod.values.firstWhere(
+        (e) =>
+            e.toString().split('.').last == (data['paymentMethod'] ?? 'cash'),
+        orElse: () => PaymentMethod.cash,
+      ),
+      riderId: data['riderId'],
+      riderName: data['riderName'],
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      timeline: List<Map<String, dynamic>>.from(data['timeline'] ?? []),
     );
   }
-}
 
-class OrderService extends ChangeNotifier {
-  static final OrderService _instance = OrderService._internal();
-  factory OrderService() => _instance;
-  OrderService._internal() {
-    _loadOrders();
-  }
-
-  final List<OrderModel> _orders = [];
-  OrderModel? _currentOrder;
-
-  List<OrderModel> get orders => List.unmodifiable(_orders);
-  OrderModel? get currentOrder => _currentOrder;
-
-  Future<void> _loadOrders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String? ordersJson = prefs.getString('orders');
-    if (ordersJson != null) {
-      final List<dynamic> decoded = jsonDecode(ordersJson);
-      _orders.clear();
-      _orders.addAll(decoded.map((e) => OrderModel.fromJson(e)).toList());
-
-      // Restore current order if it's active
-      try {
-        _currentOrder = _orders.firstWhere((o) =>
-            o.status == OrderStatus.placed ||
-            o.status == OrderStatus.confirmed ||
-            o.status == OrderStatus.outForDelivery);
-      } catch (_) {
-        _currentOrder = null;
-      }
-
-      notifyListeners();
-    }
-  }
-
-  Future<void> _saveOrders() async {
-    final prefs = await SharedPreferences.getInstance();
-    final String encoded = jsonEncode(_orders.map((o) => o.toJson()).toList());
-    await prefs.setString('orders', encoded);
-  }
-
-  void createOrder(List<CartItem> items, double totalAmount) {
-    final newOrder = OrderModel(
-      id: 'ORD-${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}',
-      items: List.from(items),
-      totalAmount: totalAmount,
-      date: DateTime.now(),
-      status: OrderStatus.placed,
-    );
-    _orders.insert(0, newOrder); // Add to top of list
-    _currentOrder = newOrder;
-    _saveOrders();
-    notifyListeners();
-  }
-
-  void updateOrderStatus(String orderId, OrderStatus status) {
-    final index = _orders.indexWhere((o) => o.id == orderId);
-    if (index != -1) {
-      _orders[index].status = status;
-      if (_currentOrder?.id == orderId) {
-        _currentOrder?.status = status;
-      }
-      _saveOrders();
-      notifyListeners();
-    }
-  }
-
-  void cancelOrder(String orderId) {
-    updateOrderStatus(orderId, OrderStatus.cancelled);
+  Map<String, dynamic> toMap() {
+    return {
+      'userId': userId,
+      'userName': userName,
+      'userPhone': userPhone,
+      'items': items.map((item) => item.toMap()).toList(),
+      'totalAmount': totalAmount,
+      'deliveryAddress': deliveryAddress,
+      'deliveryLocation': deliveryLocation,
+      'status': status.toString().split('.').last,
+      'paymentStatus': paymentStatus.toString().split('.').last,
+      'paymentMethod': paymentMethod.toString().split('.').last,
+      'riderId': riderId,
+      'riderName': riderName,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'timeline': timeline,
+    };
   }
 }
