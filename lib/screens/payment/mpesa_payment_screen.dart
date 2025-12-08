@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
-import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/payment/payment_waiting_screen.dart';
 
 class MpesaPaymentScreen extends StatelessWidget {

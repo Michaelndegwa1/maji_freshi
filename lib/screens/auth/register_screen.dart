@@ -19,8 +19,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final AuthService _authService = AuthService();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   String _phoneNumber = '';
   bool _isLoading = false;
+  bool _isEmailRegistration = false; // Toggle state
 
   void _handleSignUp() async {
     if (_nameController.text.isEmpty) {
@@ -29,11 +31,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
       return;
     }
-    if (_phoneNumber.isEmpty || _phoneNumber.length < 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter a valid phone number')),
-      );
-      return;
+
+    if (_isEmailRegistration) {
+      // Email Registration Validation
+      if (_emailController.text.isEmpty ||
+          !_emailController.text.contains('@')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid email address')),
+        );
+        return;
+      }
+      if (_passwordController.text.isEmpty ||
+          _passwordController.text.length < 6) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('Password must be at least 6 characters')),
+        );
+        return;
+      }
+    } else {
+      // Phone Registration Validation
+      if (_phoneNumber.isEmpty || _phoneNumber.length < 10) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please enter a valid phone number')),
+        );
+        return;
+      }
     }
 
     setState(() {
@@ -41,36 +64,54 @@ class _RegisterScreenState extends State<RegisterScreen> {
     });
 
     try {
-      await _authService.verifyPhoneNumber(
-        phoneNumber: _phoneNumber,
-        onCodeSent: (String verificationId, int? resendToken) {
-          setState(() {
-            _isLoading = false;
-          });
-          Navigator.push(
+      if (_isEmailRegistration) {
+        // Email Sign Up
+        UserCredential credential = await _authService.signUpWithEmailPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          name: _nameController.text.trim(),
+        );
+
+        if (credential.user != null && mounted) {
+          Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(
-              builder: (context) => OtpScreen(
-                verificationId: verificationId,
-                phoneNumber: _phoneNumber,
-                name: _nameController.text.trim(),
-                email: _emailController.text.trim(),
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            (route) => false,
+          );
+        }
+      } else {
+        // Phone Sign Up
+        await _authService.verifyPhoneNumber(
+          phoneNumber: _phoneNumber,
+          onCodeSent: (String verificationId, int? resendToken) {
+            setState(() {
+              _isLoading = false;
+            });
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => OtpScreen(
+                  verificationId: verificationId,
+                  phoneNumber: _phoneNumber,
+                  name: _nameController.text.trim(),
+                  email: _emailController.text.trim(),
+                ),
               ),
-            ),
-          );
-        },
-        onVerificationFailed: (FirebaseAuthException e) {
-          setState(() {
-            _isLoading = false;
-          });
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Verification Failed: ${e.message}')),
-          );
-        },
-        onCodeAutoRetrievalTimeout: (String verificationId) {
-          // Auto-resolution timed out...
-        },
-      );
+            );
+          },
+          onVerificationFailed: (FirebaseAuthException e) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Verification Failed: ${e.message}')),
+            );
+          },
+          onCodeAutoRetrievalTimeout: (String verificationId) {
+            // Auto-resolution timed out...
+          },
+        );
+      }
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -149,6 +190,71 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 32),
+            // Toggle for Registration Method
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isEmailRegistration = false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: !_isEmailRegistration
+                                ? AppColors.secondary
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Phone Number',
+                          style: TextStyle(
+                            color: !_isEmailRegistration
+                                ? AppColors.secondary
+                                : Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isEmailRegistration = true),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        border: Border(
+                          bottom: BorderSide(
+                            color: _isEmailRegistration
+                                ? AppColors.secondary
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Email',
+                          style: TextStyle(
+                            color: _isEmailRegistration
+                                ? AppColors.secondary
+                                : Colors.grey,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 32),
+
             const Text(
               'Full Name',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
@@ -164,47 +270,81 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Phone Number',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            IntlPhoneField(
-              decoration: InputDecoration(
-                labelText: 'Phone Number',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+
+            if (!_isEmailRegistration) ...[
+              const Text(
+                'Phone Number',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              IntlPhoneField(
+                decoration: InputDecoration(
+                  labelText: 'Phone Number',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                initialCountryCode: 'KE',
+                onChanged: (phone) {
+                  _phoneNumber = phone.completeNumber;
+                },
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text(
+                    'Email Address',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  Text(
+                    'Optional',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  hintText: 'john@example.com',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-              initialCountryCode: 'KE',
-              onChanged: (phone) {
-                _phoneNumber = phone.completeNumber;
-              },
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                Text(
-                  'Email Address',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                Text(
-                  'Optional',
-                  style: TextStyle(color: Colors.grey),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _emailController,
-              decoration: InputDecoration(
-                hintText: 'john@example.com',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+            ] else ...[
+              const Text(
+                'Email Address',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _emailController,
+                decoration: InputDecoration(
+                  hintText: 'john@example.com',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(height: 24),
+              const Text(
+                'Password',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+              const SizedBox(height: 8),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  hintText: 'Enter your password',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ],
             const SizedBox(height: 40),
             _isLoading
                 ? const Center(child: CircularProgressIndicator())

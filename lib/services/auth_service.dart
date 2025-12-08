@@ -76,6 +76,49 @@ class AuthService {
     }
   }
 
+  // Sign up with Email and Password
+  Future<UserCredential> signUpWithEmailPassword({
+    required String email,
+    required String password,
+    required String name,
+  }) async {
+    try {
+      UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+
+      if (userCredential.user != null) {
+        await saveUserToFirestore(
+          user: userCredential.user!,
+          name: name,
+          email: email,
+        );
+      }
+      return userCredential;
+    } catch (e) {
+      debugPrint("Error signing up with Email/Password: $e");
+      rethrow;
+    }
+  }
+
+  // Sign in with Email and Password
+  Future<UserCredential> signInWithEmailPassword({
+    required String email,
+    required String password,
+  }) async {
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      debugPrint("Error signing in with Email/Password: $e");
+      rethrow;
+    }
+  }
+
   // Create or Update User in Firestore
   Future<void> saveUserToFirestore({
     required User user,
