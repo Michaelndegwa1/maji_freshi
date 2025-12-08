@@ -414,7 +414,8 @@ class OrderTrackingScreen extends StatelessWidget {
                                     context,
                                     MaterialPageRoute(
                                         builder: (context) =>
-                                            const OrderDeliveredScreen()),
+                                            OrderDeliveredScreen(
+                                                orderId: order.id)),
                                   );
                                 }
                               } catch (e) {

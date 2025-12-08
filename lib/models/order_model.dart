@@ -106,7 +106,6 @@ class OrderModel {
       'riderId': riderId,
       'riderName': riderName,
       'createdAt': Timestamp.fromDate(createdAt),
-      'createdAt': Timestamp.fromDate(createdAt),
       'timeline': timeline,
       'rating': rating,
       'review': review,

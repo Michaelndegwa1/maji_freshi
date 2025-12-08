@@ -3,9 +3,26 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/screens/home/home_screen.dart';
+import 'package:maji_freshi/services/database_service.dart';
 
-class OrderDeliveredScreen extends StatelessWidget {
-  const OrderDeliveredScreen({super.key});
+class OrderDeliveredScreen extends StatefulWidget {
+  final String? orderId;
+  const OrderDeliveredScreen({super.key, this.orderId});
+
+  @override
+  State<OrderDeliveredScreen> createState() => _OrderDeliveredScreenState();
+}
+
+class _OrderDeliveredScreenState extends State<OrderDeliveredScreen> {
+  double _rating = 0;
+  final TextEditingController _commentController = TextEditingController();
+  bool _isLoading = false;
+
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +77,12 @@ class OrderDeliveredScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Order #1234 was delivered on 23 Oct 2023, 11:45 AM',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
+            if (widget.orderId != null)
+              Text(
+                'Order #${widget.orderId!.substring(widget.orderId!.length - 4)}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 16),
+              ),
             const SizedBox(height: 40),
             Container(
               padding: const EdgeInsets.all(24),
@@ -107,11 +125,14 @@ class OrderDeliveredScreen extends StatelessWidget {
                       color: Colors.amber,
                     ),
                     onRatingUpdate: (rating) {
-                      print(rating);
+                      setState(() {
+                        _rating = rating;
+                      });
                     },
                   ),
                   const SizedBox(height: 24),
                   TextField(
+                    controller: _commentController,
                     maxLines: 4,
                     decoration: InputDecoration(
                       hintText: 'Add a comment (optional)',
@@ -129,7 +150,44 @@ class OrderDeliveredScreen extends StatelessWidget {
             const SizedBox(height: 40),
             PrimaryButton(
               text: 'SUBMIT RATING',
-              onPressed: () => _navigateToHome(context),
+              isLoading: _isLoading,
+              onPressed: () async {
+                if (widget.orderId == null) {
+                  _navigateToHome(context);
+                  return;
+                }
+
+                setState(() {
+                  _isLoading = true;
+                });
+
+                try {
+                  await DatabaseService().submitOrderRating(
+                    widget.orderId!,
+                    _rating,
+                    _commentController.text,
+                  );
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Thank you for your feedback!')),
+                    );
+                    _navigateToHome(context);
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Failed to submit rating: $e')),
+                    );
+                  }
+                } finally {
+                  if (mounted) {
+                    setState(() {
+                      _isLoading = false;
+                    });
+                  }
+                }
+              },
             ),
             const SizedBox(height: 24),
             TextButton(

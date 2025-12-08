@@ -108,6 +108,14 @@ class DatabaseService {
     });
   }
 
+  Future<void> submitOrderRating(
+      String orderId, double rating, String review) async {
+    await _ordersCollection.doc(orderId).update({
+      'rating': rating,
+      'review': review,
+    });
+  }
+
   // --- Migration / Admin Methods ---
 
   Future<void> uploadProduct(ProductModel product) async {
