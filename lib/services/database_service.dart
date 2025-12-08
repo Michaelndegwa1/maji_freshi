@@ -84,12 +84,25 @@ class DatabaseService {
 
   Future<void> cancelOrder(String orderId) async {
     await _ordersCollection.doc(orderId).update({
-      'status': OrderStatus.cancelled.index, // Store as int
+      'status': 'cancelled', // Store as String to match OrderModel
       'timeline': FieldValue.arrayUnion([
         {
           'status': 'cancelled',
           'timestamp': Timestamp.now(),
           'description': 'Order cancelled by user',
+        }
+      ]),
+    });
+  }
+
+  Future<void> confirmDelivery(String orderId) async {
+    await _ordersCollection.doc(orderId).update({
+      'status': 'delivered', // Store as String
+      'timeline': FieldValue.arrayUnion([
+        {
+          'status': 'delivered',
+          'timestamp': Timestamp.now(),
+          'description': 'Order delivered and confirmed by customer',
         }
       ]),
     });

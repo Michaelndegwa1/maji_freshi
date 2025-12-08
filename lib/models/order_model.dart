@@ -31,6 +31,8 @@ class OrderModel {
   final DateTime createdAt;
   final List<Map<String, dynamic>>
       timeline; // [{status: 'pending', time: timestamp}]
+  final double? rating;
+  final String? review;
 
   const OrderModel({
     required this.id,
@@ -48,6 +50,8 @@ class OrderModel {
     this.riderName,
     required this.createdAt,
     this.timeline = const [],
+    this.rating,
+    this.review,
   });
 
   factory OrderModel.fromMap(Map<String, dynamic> data, String documentId) {
@@ -82,6 +86,8 @@ class OrderModel {
       riderName: data['riderName'],
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       timeline: List<Map<String, dynamic>>.from(data['timeline'] ?? []),
+      rating: (data['rating'] ?? 0).toDouble(),
+      review: data['review'],
     );
   }
 
@@ -100,7 +106,10 @@ class OrderModel {
       'riderId': riderId,
       'riderName': riderName,
       'createdAt': Timestamp.fromDate(createdAt),
+      'createdAt': Timestamp.fromDate(createdAt),
       'timeline': timeline,
+      'rating': rating,
+      'review': review,
     };
   }
 }

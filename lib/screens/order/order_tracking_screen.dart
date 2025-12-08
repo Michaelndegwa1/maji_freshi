@@ -320,6 +320,27 @@ class OrderTrackingScreen extends StatelessWidget {
                           Center(
                             child: TextButton(
                               onPressed: () {
+                                final timeDifference =
+                                    DateTime.now().difference(order.createdAt);
+                                if (timeDifference.inMinutes > 10) {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Cannot Cancel Order'),
+                                      content: const Text(
+                                          'This order cannot be cancelled as the delivery process has already begun (more than 10 minutes have passed).'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  return;
+                                }
+
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
@@ -379,19 +400,69 @@ class OrderTrackingScreen extends StatelessWidget {
                               ),
                             ),
                           ),
-                        // Temporary button to simulate delivery
-                        const SizedBox(height: 20),
-                        PrimaryButton(
-                          text: 'Simulate Delivery',
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const OrderDeliveredScreen()),
-                            );
-                          },
-                        ),
+                        // Confirm Delivery Button (Only when Out for Delivery)
+                        if (order.status == OrderStatus.out_for_delivery) ...[
+                          const SizedBox(height: 20),
+                          PrimaryButton(
+                            text: 'Confirm Delivery',
+                            onPressed: () async {
+                              try {
+                                await DatabaseService()
+                                    .confirmDelivery(order.id);
+                                if (context.mounted) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const OrderDeliveredScreen()),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Failed to confirm delivery: $e')),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ],
+
+                        // Simulate Delivery Button (For Testing - Show if not delivered/cancelled)
+                        if (order.status != OrderStatus.delivered &&
+                            order.status != OrderStatus.cancelled &&
+                            order.status != OrderStatus.out_for_delivery) ...[
+                          const SizedBox(height: 20),
+                          PrimaryButton(
+                            text: 'Simulate Delivery (Test)',
+                            color:
+                                Colors.grey, // Distinct color for test button
+                            onPressed: () async {
+                              try {
+                                await DatabaseService()
+                                    .confirmDelivery(order.id);
+                                if (context.mounted) {
+                                  Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const OrderDeliveredScreen()),
+                                  );
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Failed to simulate delivery: $e')),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ],
                       ],
                     ),
                   ),

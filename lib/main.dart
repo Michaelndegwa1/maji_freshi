@@ -4,8 +4,6 @@ import 'package:maji_freshi/utils/app_theme.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:maji_freshi/data/product_data.dart';
-import 'package:maji_freshi/services/database_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,22 +11,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // TODO: Remove this after first run
-  // try {
-  //   await _migrateData();
-  // } catch (e) {
-  //   print('Migration failed: $e');
-  // }
-
   runApp(const MyApp());
-}
-
-Future<void> _migrateData() async {
-  final db = DatabaseService();
-  for (var product in ProductData.products) {
-    await db.uploadProduct(product);
-    print('Uploaded: ${product.title}');
-  }
 }
 
 class MyApp extends StatelessWidget {
