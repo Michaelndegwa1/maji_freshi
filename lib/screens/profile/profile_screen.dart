@@ -14,8 +14,14 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // TODO: Get actual current user ID from Auth
-    const String currentUserId = 'user_123';
+    // Get actual current user ID from Auth
+    final currentUser = AuthService().currentUser;
+    if (currentUser == null) {
+      return const Scaffold(
+        body: Center(child: Text('Please log in to view profile')),
+      );
+    }
+    final String currentUserId = currentUser.uid;
     final dbService = DatabaseService();
 
     return Scaffold(
