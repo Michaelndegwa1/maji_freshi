@@ -82,6 +82,19 @@ class DatabaseService {
     });
   }
 
+  Future<void> cancelOrder(String orderId) async {
+    await _ordersCollection.doc(orderId).update({
+      'status': OrderStatus.cancelled.index, // Store as int
+      'timeline': FieldValue.arrayUnion([
+        {
+          'status': 'cancelled',
+          'timestamp': Timestamp.now(),
+          'description': 'Order cancelled by user',
+        }
+      ]),
+    });
+  }
+
   // --- Migration / Admin Methods ---
 
   Future<void> uploadProduct(ProductModel product) async {

@@ -332,19 +332,34 @@ class OrderTrackingScreen extends StatelessWidget {
                                         child: const Text('No'),
                                       ),
                                       TextButton(
-                                        onPressed: () {
-                                          // TODO: Implement cancelOrder in DatabaseService
-                                          // DatabaseService().cancelOrder(order.id);
-                                          Navigator.pop(
-                                              context); // Close dialog
-                                          Navigator.pop(
-                                              context); // Close tracking screen
-                                          ScaffoldMessenger.of(context)
-                                              .showSnackBar(
-                                            const SnackBar(
-                                                content:
-                                                    Text('Order cancelled')),
-                                          );
+                                        onPressed: () async {
+                                          try {
+                                            await DatabaseService()
+                                                .cancelOrder(order.id);
+                                            if (context.mounted) {
+                                              Navigator.pop(
+                                                  context); // Close dialog
+                                              Navigator.pop(
+                                                  context); // Close tracking screen
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                const SnackBar(
+                                                    content: Text(
+                                                        'Order cancelled')),
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              Navigator.pop(
+                                                  context); // Close dialog
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        'Failed to cancel order: $e')),
+                                              );
+                                            }
+                                          }
                                         },
                                         child: const Text('Yes',
                                             style:
