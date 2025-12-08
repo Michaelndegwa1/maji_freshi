@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/models/notification_model.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
@@ -33,6 +34,16 @@ class NotificationsScreen extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:maji_freshi/models/cart_model.dart';
 import 'package:maji_freshi/screens/order/order_confirmation_screen.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -30,6 +31,16 @@ class CartScreen extends StatelessWidget {
               'Clear',
               style: TextStyle(color: Colors.red),
             ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
       ),
