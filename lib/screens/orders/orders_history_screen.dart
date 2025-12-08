@@ -5,6 +5,7 @@ import 'package:maji_freshi/screens/order/order_tracking_screen.dart';
 import 'package:maji_freshi/models/order_model.dart';
 import 'package:maji_freshi/services/database_service.dart';
 import 'package:intl/intl.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class OrdersHistoryScreen extends StatefulWidget {
   const OrdersHistoryScreen({super.key});
@@ -49,6 +50,16 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen>
           IconButton(
             icon: const Icon(Icons.tune, color: AppColors.text),
             onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
         bottom: TabBar(

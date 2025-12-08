@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/screens/payment/payment_waiting_screen.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class MpesaPaymentScreen extends StatelessWidget {
   final double amount;
@@ -23,6 +24,18 @@ class MpesaPaymentScreen extends StatelessWidget {
           style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/models/user_model.dart';
 import 'package:maji_freshi/services/database_service.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class PaymentMethodsScreen extends StatefulWidget {
   final String userId;
@@ -103,6 +104,18 @@ class _PaymentMethodsScreenState extends State<PaymentMethodsScreen> {
           style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<UserModel?>(
         stream: _dbService.streamUser(widget.userId),

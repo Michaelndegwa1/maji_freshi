@@ -5,6 +5,7 @@ import 'package:maji_freshi/screens/order/order_delivered_screen.dart';
 import 'package:maji_freshi/models/order_model.dart';
 import 'package:maji_freshi/services/database_service.dart';
 import 'package:intl/intl.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class OrderTrackingScreen extends StatelessWidget {
   final String? orderId;
@@ -22,6 +23,18 @@ class OrderTrackingScreen extends StatelessWidget {
             icon: const Icon(Icons.arrow_back, color: AppColors.text),
             onPressed: () => Navigator.pop(context),
           ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.home, color: AppColors.text),
+              onPressed: () {
+                Navigator.pushAndRemoveUntil(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                  (route) => false,
+                );
+              },
+            ),
+          ],
         ),
         body: const Center(child: Text('No order selected')),
       );
@@ -45,6 +58,18 @@ class OrderTrackingScreen extends StatelessWidget {
                   icon: const Icon(Icons.arrow_back, color: AppColors.text),
                   onPressed: () => Navigator.pop(context),
                 ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.home, color: AppColors.text),
+                    onPressed: () {
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const HomeScreen()),
+                        (route) => false,
+                      );
+                    },
+                  ),
+                ],
               ),
               body: const Center(child: Text('Order not found')),
             );
@@ -67,6 +92,18 @@ class OrderTrackingScreen extends StatelessWidget {
                     color: AppColors.text, fontWeight: FontWeight.bold),
               ),
               centerTitle: true,
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.home, color: AppColors.text),
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (context) => const HomeScreen()),
+                      (route) => false,
+                    );
+                  },
+                ),
+              ],
             ),
             body: SingleChildScrollView(
               child: Column(

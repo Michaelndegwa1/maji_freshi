@@ -8,6 +8,7 @@ import 'package:maji_freshi/screens/profile/payment_methods_screen.dart';
 import 'package:maji_freshi/screens/orders/orders_history_screen.dart';
 import 'package:maji_freshi/services/database_service.dart';
 import 'package:maji_freshi/services/auth_service.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -43,6 +44,16 @@ class ProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.settings, color: AppColors.text),
             onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
           ),
         ],
       ),

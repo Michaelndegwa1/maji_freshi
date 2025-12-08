@@ -3,6 +3,7 @@ import 'package:maji_freshi/utils/app_colors.dart';
 import 'package:maji_freshi/widgets/primary_button.dart';
 import 'package:maji_freshi/models/user_model.dart';
 import 'package:maji_freshi/services/database_service.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserModel user;
@@ -93,6 +94,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),

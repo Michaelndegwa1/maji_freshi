@@ -6,6 +6,7 @@ import 'package:maji_freshi/models/cart_model.dart';
 import 'package:maji_freshi/models/order_model.dart';
 import 'package:maji_freshi/services/database_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:maji_freshi/screens/home/home_screen.dart';
 
 class OrderConfirmationScreen extends StatefulWidget {
   const OrderConfirmationScreen({super.key});
@@ -39,6 +40,18 @@ class _OrderConfirmationScreenState extends State<OrderConfirmationScreen> {
           style: TextStyle(color: AppColors.text, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: AppColors.text),
+            onPressed: () {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomeScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
